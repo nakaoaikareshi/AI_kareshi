@@ -106,7 +106,7 @@ export const FantasyAvatar: React.FC<FantasyAvatarProps> = ({
 
   // FF風の表情
   const getExpression = () => {
-    if (currentBlink) return { eyeOpen: 0.1, eyeShine: 0 };
+    if (currentBlink) return { eyeOpen: 0.1, eyeShine: 0, mouthCurve: 0, blush: 0 };
     
     switch (emotionState) {
       case 'happy': return { eyeOpen: 0.9, eyeShine: 1.2, mouthCurve: 1.2, blush: 0.6 };
