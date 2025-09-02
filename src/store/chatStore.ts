@@ -13,6 +13,7 @@ interface ChatState {
   setConversation: (conversation: Conversation) => void;
   markMessagesAsRead: () => void;
   clearChat: () => void;
+  loadConversation: (userId: string, characterId: string) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -30,6 +31,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       messages: [...state.messages, newMessage],
     }));
+
+    // Save to database via API
+    const state = get();
+    if (state.currentConversation) {
+      fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: state.currentConversation.id,
+          message: newMessage,
+        }),
+      }).catch(console.error);
+    }
   },
 
   setMessages: (messages: Message[]) => {
@@ -48,12 +62,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   markMessagesAsRead: () => {
+    const state = get();
+    
+    // Update local state
     set((state) => ({
       messages: state.messages.map((msg) => ({
         ...msg,
         isRead: true,
       })),
     }));
+
+    // Update database via API
+    if (state.currentConversation) {
+      fetch('/api/messages/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: state.currentConversation.id,
+        }),
+      }).catch(console.error);
+    }
   },
 
   clearChat: () => {
@@ -61,5 +89,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: [],
       currentConversation: null,
     });
+  },
+
+  loadConversation: async (userId: string, characterId: string) => {
+    try {
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, characterId }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        set({
+          currentConversation: data.data,
+          messages: data.data.messages,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load conversation:', error);
+    }
   },
 }));

@@ -52,6 +52,7 @@ export interface Conversation {
 export interface User {
   id: string;
   email: string;
+  password?: string; // Optional for client-side (never sent)
   name: string; // ユーザーの名前
   nickname: string; // ユーザーの呼び名（相手に呼んでもらう名前）
   createdAt: Date;

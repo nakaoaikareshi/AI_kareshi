@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { Character, CharacterPersonality } from '@/types';
 import { MoodSystem } from '@/utils/moodSystem';
 import { DailyEventGenerator } from '@/utils/dailyEvents';
+import { RefusalSystem } from '@/utils/refusalSystem';
 
 // Rate limiting setup
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -160,6 +161,23 @@ export async function POST(request: NextRequest) {
 
     // 気分状態の計算
     const moodState = MoodSystem.calculateCurrentMood(character);
+    
+    // 要望を断るかチェック
+    const refusalResponse = RefusalSystem.generateRefusalWithPersonality(
+      message,
+      character,
+      moodState.currentMood
+    );
+    
+    if (refusalResponse) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          content: refusalResponse,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
     
     // 日常イベントの生成
     const dailyEvent = DailyEventGenerator.getEventToShare(character.occupation);

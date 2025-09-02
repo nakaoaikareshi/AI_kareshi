@@ -7,6 +7,7 @@ import { useHydration } from '@/hooks/useHydration';
 import { UserSetup } from '@/components/setup/UserSetup';
 import { CharacterSetup } from '@/components/setup/CharacterSetup';
 import { ChatContainer } from '@/components/chat/ChatContainer';
+import { AuthWrapper } from '@/components/auth/AuthWrapper';
 
 export default function Home() {
   const isHydrated = useHydration();
@@ -25,14 +26,16 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen">
-      {!isUserSetup ? (
-        <UserSetup />
-      ) : !isCharacterSetup ? (
-        <CharacterSetup />
-      ) : (
-        <ChatContainer />
-      )}
-    </div>
+    <AuthWrapper>
+      <div className="h-screen">
+        {!isUserSetup ? (
+          <UserSetup />
+        ) : !isCharacterSetup ? (
+          <CharacterSetup />
+        ) : (
+          <ChatContainer />
+        )}
+      </div>
+    </AuthWrapper>
   );
 }

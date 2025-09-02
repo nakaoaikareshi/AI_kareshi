@@ -13,10 +13,12 @@ import { GiftModal } from '@/components/gift/GiftModal';
 import { SimpleAvatar } from '@/components/avatar/SimpleAvatar';
 import { MemoryAlbum } from '@/components/memories/MemoryAlbum';
 import { ScheduleModal } from '@/components/schedule/ScheduleModal';
+import { MoodIndicator } from './MoodIndicator';
+import { MoodSystem } from '@/utils/moodSystem';
 
 export const ChatContainer: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, isLoading, addMessage, setLoading } = useChatStore();
+  const { messages, isLoading, addMessage, setLoading, loadConversation, markMessagesAsRead } = useChatStore();
   const { character } = useCharacterStore();
   const { user } = useUserStore();
   const [showSettings, setShowSettings] = useState(false);
@@ -25,6 +27,7 @@ export const ChatContainer: React.FC = () => {
   const [showGift, setShowGift] = useState(false);
   const [showMemories, setShowMemories] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
+  const [moodState, setMoodState] = useState(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,8 +37,26 @@ export const ChatContainer: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Load conversation when component mounts
+  useEffect(() => {
+    if (character && user) {
+      loadConversation(user.id, character.id);
+    }
+  }, [character, user, loadConversation]);
+
+  // Mark messages as read when user views them
+  useEffect(() => {
+    if (messages.length > 0) {
+      const timer = setTimeout(() => {
+        markMessagesAsRead();
+      }, 1000); // Mark as read after 1 second of viewing
+      
+      return () => clearTimeout(timer);
+    }
+  }, [messages, markMessagesAsRead]);
+
   const handleSendMessage = async (content: string) => {
-    if (!character) return;
+    if (!character || !user) return;
 
     // Add user message
     addMessage({
@@ -75,7 +96,7 @@ export const ChatContainer: React.FC = () => {
         senderId: character.id,
         content: data.data.content,
         type: 'text',
-        isRead: true,
+        isRead: false, // AI messages start as unread
         isUser: false,
       });
 
@@ -85,7 +106,7 @@ export const ChatContainer: React.FC = () => {
         senderId: character.id,
         content: 'すみません、少し調子が悪いみたいです...😅 もう一度話しかけてもらえますか？',
         type: 'text',
-        isRead: true,
+        isRead: false,
         isUser: false,
       });
     } finally {
@@ -108,7 +129,7 @@ export const ChatContainer: React.FC = () => {
         senderId: character!.id,
         content: 'わあ〜！ありがとう💕 すごく嬉しい！大切にするね😊',
         type: 'text',
-        isRead: true,
+        isRead: false,
         isUser: false,
       });
     }, 1000);
@@ -130,16 +151,19 @@ export const ChatContainer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center justify-between">
+      <div className="bg-white border-b px-4 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10">
-            <SimpleAvatar character={character} className="w-10 h-10" />
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold">
+            💕
           </div>
           <div>
-            <h1 className="font-semibold text-gray-900">{character.nickname}</h1>
-            <p className="text-sm text-green-500">オンライン</p>
+            <h1 className="font-bold text-gray-900 text-lg">{character.nickname}</h1>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <p className="text-sm text-green-600 font-medium">オンライン</p>
+            </div>
           </div>
         </div>
         
@@ -190,7 +214,7 @@ export const ChatContainer: React.FC = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-gray-50 to-gray-100">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
             <p>{character.nickname}との会話を始めましょう！</p>
