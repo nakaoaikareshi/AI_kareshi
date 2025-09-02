@@ -54,8 +54,11 @@ export const FantasyAvatar: React.FC<FantasyAvatarProps> = ({
 
   useEffect(() => {
     const idleInterval = setInterval(() => {
-      setIdleAnimation(prev => (prev + 1) % 360);
-      setHairFloat(Math.sin(prev * 0.05) * 2);
+      setIdleAnimation(prev => {
+        const next = (prev + 1) % 360;
+        setHairFloat(Math.sin(next * 0.05) * 2);
+        return next;
+      });
     }, 50);
     return () => clearInterval(idleInterval);
   }, []);
