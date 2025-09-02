@@ -3,6 +3,7 @@ import { Settings, ShoppingBag, Heart, Gift, Video } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { useUserStore } from '@/store/userStore';
+import { MoodState } from '@/types';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { TypingIndicator } from './TypingIndicator';
@@ -30,7 +31,7 @@ export const ChatContainer: React.FC = () => {
   const [showMemories, setShowMemories] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
-  const [moodState, setMoodState] = useState<{ currentMood: number } | null>(null);
+  const [moodState, setMoodState] = useState<MoodState | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState<'happy' | 'sad' | 'surprised' | 'angry' | 'love' | 'normal'>('normal');
 
