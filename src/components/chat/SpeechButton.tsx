@@ -32,7 +32,10 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({ text }) => {
       setIsPaused(false);
     } else {
       if (character) {
-        speechSynthesis.speakWithPersonality(text, character, {
+        speechSynthesis.speakWithPersonality(text, {
+          gender: character.gender,
+          personality: character.personality as Record<string, number>
+        }, {
           onStart: () => {
             setIsPlaying(true);
             setIsPaused(false);
