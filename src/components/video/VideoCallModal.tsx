@@ -87,8 +87,21 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
                 hairStyle: 'medium',
                 hairColor: 'brown',
                 eyeColor: 'brown',
+                eyeShape: 'round',
+                eyebrowStyle: 'natural',
+                noseStyle: 'small',
+                mouthStyle: 'small',
+                skinTone: '#FDBCB4',
+                faceShape: 'oval',
+                bodyType: 'average',
+                height: 'average',
                 outfit: 'casual',
-                accessories: []
+                topWear: 'tshirt',
+                bottomWear: 'pants',
+                shoes: 'sneakers',
+                accessories: [],
+                jewelry: [],
+                makeup: []
               }}
               size="large"
               mood={currentMood}

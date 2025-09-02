@@ -19,9 +19,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const defaultAvatar: AvatarSettings = {
     hairStyle: 'medium',
     hairColor: 'brown',
-    eyeColor: 'brown', 
+    eyeColor: 'brown',
+    eyeShape: 'round',
+    eyebrowStyle: 'natural',
+    noseStyle: 'small',
+    mouthStyle: 'small',
+    skinTone: '#FDBCB4',
+    faceShape: 'oval',
+    bodyType: 'average',
+    height: 'average',
     outfit: 'casual',
+    topWear: 'tshirt',
+    bottomWear: 'pants',
+    shoes: 'sneakers',
     accessories: [],
+    jewelry: [],
+    makeup: [],
   };
 
   const handleAvatarUpdate = (avatar: AvatarSettings) => {
