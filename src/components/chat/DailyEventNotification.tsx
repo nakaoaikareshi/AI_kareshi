@@ -19,15 +19,6 @@ export const DailyEventNotification: React.FC<DailyEventNotificationProps> = ({
   const [pendingEvent, setPendingEvent] = useState<DailyEvent | null>(null);
   const [showNotification, setShowNotification] = useState(false);
 
-  useEffect(() => {
-    // 10秒後にランダムで日常イベントをチェック
-    const timer = setTimeout(() => {
-      checkForDailyEvent();
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, [checkForDailyEvent]);
-
   const checkForDailyEvent = useCallback(() => {
     const event = DailyEventGenerator.generateDailyEvent(character.occupation);
     
@@ -36,6 +27,15 @@ export const DailyEventNotification: React.FC<DailyEventNotificationProps> = ({
       setShowNotification(true);
     }
   }, [character.occupation]);
+
+  useEffect(() => {
+    // 10秒後にランダムで日常イベントをチェック
+    const timer = setTimeout(() => {
+      checkForDailyEvent();
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [checkForDailyEvent]);
 
   const handleSendEvent = () => {
     if (pendingEvent) {
