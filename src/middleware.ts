@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected API routes that require authentication
-  const protectedApiRoutes = ['/api/chat', '/api/messages', '/api/conversations', '/api/mood'];
+  const protectedApiRoutes = ['/api/messages', '/api/conversations'];
   
   if (protectedApiRoutes.some(route => pathname.startsWith(route))) {
     // Verify session for protected API routes
