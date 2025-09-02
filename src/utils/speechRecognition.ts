@@ -52,13 +52,13 @@ declare global {
 
 export class SpeechRecognitionManager {
   private static instance: SpeechRecognitionManager;
-  private recognition: SpeechRecognition;
+  private recognition: SpeechRecognition | null = null;
   private isSupported: boolean;
 
   private constructor() {
-    this.isSupported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+    this.isSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
     
-    if (this.isSupported) {
+    if (this.isSupported && typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
       this.setupRecognition();
