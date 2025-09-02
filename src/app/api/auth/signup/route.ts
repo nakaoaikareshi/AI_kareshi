@@ -1,25 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/lib/database';
+import { validateInput, signupSchema, sanitizeObject } from '@/utils/validation';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password, name, nickname } = body;
-
-    // Validation
-    if (!email || !password || !name || !nickname) {
+    // Parse request body with error handling
+    let body;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { 
+          success: false,
+          error: 'Invalid JSON in request body' 
+        },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
+    // Comprehensive input validation
+    const validation = validateInput(signupSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
+        { 
+          success: false,
+          error: validation.error,
+          code: 'VALIDATION_ERROR'
+        },
         { status: 400 }
       );
     }
+
+    const { email, password, name, nickname } = sanitizedData;
 
     try {
       const user = await DatabaseService.createUser({
@@ -37,25 +49,45 @@ export async function POST(request: NextRequest) {
           name: user.name,
           nickname: user.nickname,
         },
+        message: 'User created successfully'
       });
     } catch (error: any) {
+      // Handle specific database errors
       if (error.code === 'P2002') {
         return NextResponse.json(
-          { error: 'Email already exists' },
+          { 
+            success: false,
+            error: 'An account with this email already exists',
+            code: 'EMAIL_EXISTS'
+          },
           { status: 409 }
         );
       }
       
-      console.error('Signup error:', error);
+      // Log error without exposing sensitive information
+      console.error('User creation failed:', {
+        email,
+        error: error.message,
+        code: error.code
+      });
+      
       return NextResponse.json(
-        { error: 'Failed to create user' },
+        { 
+          success: false,
+          error: 'Failed to create user account. Please try again later.',
+          code: 'CREATE_USER_ERROR'
+        },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Signup API Error:', error);
+    console.error('Signup API Error:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        success: false,
+        error: 'Service temporarily unavailable. Please try again later.',
+        code: 'INTERNAL_ERROR'
+      },
       { status: 500 }
     );
   }

@@ -1,5 +1,8 @@
 import React from 'react';
 import { Message } from '@/types';
+import { AnimeAvatar } from '@/components/avatar/AnimeAvatar';
+import { useCharacterStore } from '@/store/characterStore';
+import { SpeechButton } from './SpeechButton';
 
 interface ChatMessageProps {
   message: Message;
@@ -7,6 +10,7 @@ interface ChatMessageProps {
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isUser = message.isUser;
+  const { character } = useCharacterStore();
   
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString('ja-JP', {
@@ -18,8 +22,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   return (
     <div className={`flex mb-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser && (
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm mr-2 mt-1">
-          💕
+        <div className="mr-2 mt-1">
+          {character?.avatar ? (
+            <AnimeAvatar 
+              avatar={character.avatar} 
+              size="small"
+              mood={50}
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+              <span className="text-base">👤</span>
+            </div>
+          )}
         </div>
       )}
       <div className="flex flex-col max-w-xs lg:max-w-md">
@@ -32,14 +46,22 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             {message.content}
           </p>
         </div>
-        <div className={`text-xs mt-1 px-2 ${
-          isUser ? 'text-right text-gray-500' : 'text-left text-gray-400'
+        <div className={`flex items-center mt-1 px-2 ${
+          isUser ? 'justify-end' : 'justify-between'
         }`}>
-          <span>{formatTime(message.timestamp)}</span>
-          {isUser && (
-            <span className="ml-2">
-              {message.isRead ? '既読' : ''}
-            </span>
+          <div className={`text-xs ${
+            isUser ? 'text-gray-500' : 'text-gray-400'
+          }`}>
+            <span>{formatTime(message.timestamp)}</span>
+            {isUser && (
+              <span className="ml-2">
+                {message.isRead ? '既読' : ''}
+              </span>
+            )}
+          </div>
+          
+          {!isUser && (
+            <SpeechButton text={message.content} messageId={message.id} />
           )}
         </div>
       </div>

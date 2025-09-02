@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Settings, X } from 'lucide-react';
+import { Settings, X, Palette } from 'lucide-react';
 import { useCharacterStore } from '@/store/characterStore';
 import { useUserStore } from '@/store/userStore';
-import { Character, User } from '@/types';
+import { Character, User, AvatarSettings } from '@/types';
+import { AvatarCustomizer } from '@/components/avatar/AvatarCustomizer';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -10,9 +11,23 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { character, updatePersonality, clearCharacter } = useCharacterStore();
+  const { character, updatePersonality, updateAvatar, clearCharacter } = useCharacterStore();
   const { user, clearUser } = useUserStore();
   const [activeTab, setActiveTab] = useState<'user' | 'character'>('user');
+  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
+
+  const defaultAvatar: AvatarSettings = {
+    hairStyle: 'medium',
+    hairColor: 'brown',
+    eyeColor: 'brown', 
+    outfit: 'casual',
+    accessories: [],
+  };
+
+  const handleAvatarUpdate = (avatar: AvatarSettings) => {
+    updateAvatar(avatar);
+    console.log('Avatar updated:', avatar);
+  };
 
   if (!isOpen || !character || !user) return null;
 
@@ -92,6 +107,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <p className="text-gray-700 text-sm">{character.hobbies.join('、')}</p>
               </div>
               
+              {/* アバターカスタマイズボタン */}
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowAvatarCustomizer(true)}
+                  className="w-full flex items-center justify-center space-x-2 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+                >
+                  <Palette size={20} />
+                  <span>見た目をカスタマイズ</span>
+                </button>
+              </div>
+
               <div className="space-y-3">
                 <label className="block text-sm font-medium">性格調整</label>
                 {Object.entries({
@@ -134,6 +160,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </button>
         </div>
       </div>
+
+      {/* アバターカスタマイザー */}
+      <AvatarCustomizer
+        isOpen={showAvatarCustomizer}
+        onClose={() => setShowAvatarCustomizer(false)}
+        currentAvatar={character.avatar || defaultAvatar}
+        onAvatarUpdate={handleAvatarUpdate}
+        onOpenShop={() => {
+          setShowAvatarCustomizer(false);
+          // ショップを開く（後で実装）
+        }}
+      />
     </div>
   );
 };

@@ -126,9 +126,14 @@ const getMockItems = (gender: 'boyfriend' | 'girlfriend'): StoreItem[] => {
   }
 };
 
-export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, character }) => {
+export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, character, onPurchase }) => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'hair' | 'outfit' | 'accessories'>('all');
   const [cart, setCart] = useState<string[]>([]);
+  const [purchasedItems, setPurchasedItems] = useState<string[]>(() => {
+    // ローカルストレージから購入済みアイテムを取得
+    const saved = localStorage.getItem(`purchased_items_${character.id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
 
   if (!isOpen) return null;
 
@@ -152,6 +157,28 @@ export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, charact
       .filter(item => cart.includes(item.id))
       .reduce((total, item) => total + item.price, 0);
   };
+
+  const handlePurchase = () => {
+    if (cart.length === 0) return;
+    
+    // 購入確認
+    const total = getTotalPrice();
+    if (confirm(`¥${total}で${cart.length}個のアイテムを購入しますか？`)) {
+      // 購入済みアイテムに追加
+      const newPurchased = [...purchasedItems, ...cart];
+      setPurchasedItems(newPurchased);
+      
+      // ローカルストレージに保存
+      localStorage.setItem(`purchased_items_${character.id}`, JSON.stringify(newPurchased));
+      
+      // カートをクリア
+      setCart([]);
+      
+      alert('購入が完了しました！アバターカスタマイズで使用できます。');
+    }
+  };
+
+  const isPurchased = (itemId: string) => purchasedItems.includes(itemId);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -190,9 +217,22 @@ export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, charact
         <div className="p-4">
           <div className="grid grid-cols-2 gap-4">
             {filteredItems.map(item => (
-              <div key={item.id} className="border rounded-lg p-3">
-                <div className="aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">画像</span>
+              <div key={item.id} className={`border rounded-lg p-3 ${isPurchased(item.id) ? 'bg-green-50 border-green-200' : ''}`}>
+                <div className="aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center relative">
+                  <span className="text-4xl">
+                    {item.category === 'hair' ? '💇‍♀️' : 
+                     item.category === 'outfit' ? '👕' : '💎'}
+                  </span>
+                  {item.isPremium && (
+                    <div className="absolute top-1 right-1">
+                      <Star size={12} className="text-yellow-500 fill-current" />
+                    </div>
+                  )}
+                  {isPurchased(item.id) && (
+                    <div className="absolute top-1 left-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
+                      購入済み
+                    </div>
+                  )}
                 </div>
                 <h3 className="font-medium text-sm mb-1">{item.name}</h3>
                 <p className="text-xs text-gray-500 mb-2">{item.description}</p>
@@ -200,7 +240,9 @@ export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, charact
                   <span className={`font-bold ${item.isPremium ? 'text-purple-600' : 'text-blue-600'}`}>
                     ¥{item.price}
                   </span>
-                  {isInCart(item.id) ? (
+                  {isPurchased(item.id) ? (
+                    <span className="text-xs text-green-600 font-medium">所有中</span>
+                  ) : isInCart(item.id) ? (
                     <button
                       onClick={() => removeFromCart(item.id)}
                       className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
@@ -227,7 +269,10 @@ export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, charact
               <span className="font-medium">カート内: {cart.length}個</span>
               <span className="font-bold text-lg">¥{getTotalPrice()}</span>
             </div>
-            <button className="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium">
+            <button 
+              onClick={handlePurchase}
+              className="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
+            >
               購入する
             </button>
           </div>

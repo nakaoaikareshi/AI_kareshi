@@ -16,10 +16,16 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Input validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(credentials.email) || credentials.password.length < 6) {
+          return null;
+        }
+
         try {
           // Try to authenticate existing user
           const user = await DatabaseService.authenticateUser(
-            credentials.email,
+            credentials.email.toLowerCase().trim(),
             credentials.password
           );
 
@@ -34,7 +40,8 @@ export const authOptions: NextAuthOptions = {
 
           return null;
         } catch (error) {
-          console.error('Auth error:', error);
+          // Sanitized error logging - don't expose sensitive information
+          console.error('Authentication failed for user:', credentials.email);
           return null;
         }
       },
@@ -42,6 +49,12 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 24 * 60 * 60, // 24 hours
+    updateAge: 60 * 60, // 1 hour
+  },
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
     async jwt({ token, user }) {

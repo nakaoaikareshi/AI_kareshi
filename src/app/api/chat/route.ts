@@ -4,6 +4,8 @@ import { Character, CharacterPersonality } from '@/types';
 import { MoodSystem } from '@/utils/moodSystem';
 import { DailyEventGenerator } from '@/utils/dailyEvents';
 import { RefusalSystem } from '@/utils/refusalSystem';
+import { validateInput, chatMessageSchema, sanitizeString } from '@/utils/validation';
+import { logger, createRequestContext, createSuccessResponse, createErrorResponse } from '@/lib/logger';
 
 // Rate limiting setup
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -124,40 +126,83 @@ function generatePersonalityDescription(personality: CharacterPersonality): stri
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const context = createRequestContext(request);
+  
   try {
-    // Rate limiting check
+    logger.info('Chat request started', context);
+
+    // Rate limiting is handled by middleware, but keeping for backward compatibility
     const rateLimitKey = getRateLimitKey(request);
     if (isRateLimited(rateLimitKey)) {
-      return NextResponse.json(
-        { error: 'Too many requests. Please wait before sending another message.' },
-        { status: 429 }
+      logger.securityEvent('RATE_LIMITED', context);
+      return createErrorResponse(
+        'Rate limit exceeded. Please wait before sending another message.',
+        'RATE_LIMITED',
+        429,
+        context
       );
     }
 
-    const body = await request.json();
-    const { message, character, conversationHistory = [], user } = body;
+    // Parse and validate request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      logger.securityEvent('INVALID_INPUT', { ...context, error: 'Invalid JSON' });
+      return createErrorResponse(
+        'Invalid JSON in request body',
+        'INVALID_JSON',
+        400,
+        context
+      );
+    }
 
+    // Comprehensive input validation
+    const validation = validateInput(chatMessageSchema, body);
+    if (!validation.success) {
+      logger.securityEvent('INVALID_INPUT', { 
+        ...context, 
+        validationError: validation.error 
+      });
+      return createErrorResponse(
+        validation.error,
+        'VALIDATION_ERROR',
+        400,
+        context
+      );
+    }
+
+    const { message, character, conversationHistory = [], user } = validation.data;
+
+    // Add user context for logging
+    const enrichedContext = {
+      ...context,
+      userId: user?.id,
+      characterId: character.id,
+      messageLength: message.length,
+      conversationLength: conversationHistory.length
+    };
+
+    // Environment validation
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key is not configured' },
-        { status: 500 }
+      logger.error('OpenAI API key not configured', enrichedContext);
+      return createErrorResponse(
+        'Service temporarily unavailable. Please try again later.',
+        'SERVICE_ERROR',
+        500,
+        enrichedContext
       );
     }
 
-    if (!message || !character) {
-      return NextResponse.json(
-        { error: 'Message and character are required' },
-        { status: 400 }
-      );
-    }
-
-    // Input validation and sanitization
-    if (typeof message !== 'string' || message.length > 1000) {
-      return NextResponse.json(
-        { error: 'Invalid message format or length' },
-        { status: 400 }
-      );
-    }
+    // Sanitize the message content
+    const sanitizedMessage = sanitizeString(message);
+    
+    logger.debug('Message sanitized and validated', { 
+      ...enrichedContext, 
+      originalLength: message.length,
+      sanitizedLength: sanitizedMessage.length
+    });
 
     // 気分状態の計算
     const moodState = MoodSystem.calculateCurrentMood(character);
@@ -195,6 +240,10 @@ export async function POST(request: NextRequest) {
       { role: 'user', content: message },
     ];
 
+    // OpenAI API call with performance tracking
+    const openaiStartTime = Date.now();
+    logger.debug('Calling OpenAI API', enrichedContext);
+    
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
@@ -204,28 +253,55 @@ export async function POST(request: NextRequest) {
       frequency_penalty: 0.3,
     });
 
+    const openaiDuration = Date.now() - openaiStartTime;
+    logger.performance('OpenAI API call completed', openaiStartTime, {
+      ...enrichedContext,
+      model: 'gpt-4o-mini',
+      maxTokens: 300,
+      apiDuration: openaiDuration
+    });
+
     const aiResponse = completion.choices[0]?.message?.content;
 
     if (!aiResponse) {
-      return NextResponse.json(
-        { error: 'Failed to generate AI response' },
-        { status: 500 }
+      logger.error('OpenAI returned empty response', enrichedContext);
+      return createErrorResponse(
+        'Service temporarily unavailable. Please try again later.',
+        'AI_RESPONSE_ERROR',
+        500,
+        enrichedContext
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        content: aiResponse,
-        timestamp: new Date().toISOString(),
-      },
+    // Log successful completion
+    const totalDuration = Date.now() - startTime;
+    logger.info('Chat request completed successfully', {
+      ...enrichedContext,
+      responseLength: aiResponse.length,
+      totalDuration,
+      openaiDuration
+    });
+
+    return createSuccessResponse({
+      content: aiResponse,
+      timestamp: new Date().toISOString(),
     });
 
   } catch (error) {
-    console.error('Chat API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    const totalDuration = Date.now() - startTime;
+    
+    // Log error with full context but sanitized details
+    logger.error('Chat API Error', {
+      ...context,
+      totalDuration,
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown'
+    }, error);
+
+    return createErrorResponse(
+      'Service temporarily unavailable. Please try again later.',
+      'INTERNAL_ERROR',
+      500,
+      context
     );
   }
 }

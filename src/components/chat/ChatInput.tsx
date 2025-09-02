@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Send, Smile, Mic } from 'lucide-react';
 import { StickerPicker } from './StickerPicker';
 import { VoiceRecorder } from './VoiceRecorder';
+import { SpeechToTextButton } from './SpeechToTextButton';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -37,9 +38,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleVoiceMessage = (audioBlob: Blob) => {
-    // ボイスメッセージの場合は文字として「🎤 ボイスメッセージ」を送信
     onSendMessage('🎤 ボイスメッセージ');
     setShowVoiceRecorder(false);
+  };
+
+  const handleSpeechToText = (transcript: string) => {
+    setMessage(transcript);
   };
 
   return (
@@ -65,19 +69,27 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
         <div className="flex-1 relative">
           <div className="bg-gray-100 rounded-2xl border border-gray-200 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="メッセージ"
-              disabled={disabled}
-              className="w-full px-4 py-3 bg-transparent resize-none focus:outline-none disabled:opacity-50 text-sm"
-              rows={1}
-              style={{
-                minHeight: '44px',
-                maxHeight: '120px',
-              }}
-            />
+            <div className="flex items-end">
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="メッセージ"
+                disabled={disabled}
+                className="flex-1 px-4 py-3 bg-transparent resize-none focus:outline-none disabled:opacity-50 text-sm"
+                rows={1}
+                style={{
+                  minHeight: '44px',
+                  maxHeight: '120px',
+                }}
+              />
+              <div className="pb-3 pr-3">
+                <SpeechToTextButton 
+                  onTranscript={handleSpeechToText}
+                  className="!p-1.5"
+                />
+              </div>
+            </div>
           </div>
         </div>
         <button
