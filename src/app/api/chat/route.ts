@@ -325,6 +325,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { message, character, conversationHistory = [], user } = validation.data;
+    
+    // Type assertion for conversationHistory
+    const typedConversationHistory: Message[] = conversationHistory as Message[];
 
     // Add user context for logging
     const enrichedContext = {
@@ -382,12 +385,12 @@ export async function POST(request: NextRequest) {
     const systemPrompt = generateSystemPrompt(character, user?.nickname, moodState.currentMood) + eventText;
     
     // Prepare conversation history for OpenAI with memory context
-    const memoryContext = generateMemoryContext(conversationHistory, character);
+    const memoryContext = generateMemoryContext(typedConversationHistory, character);
     const enhancedSystemPrompt = systemPrompt + (memoryContext ? `\n\n## 記憶している重要な情報\n${memoryContext}` : '');
     
     const messages = [
       { role: 'system', content: enhancedSystemPrompt },
-      ...conversationHistory.slice(-20).map((msg: { isUser: boolean; content: string }) => ({
+      ...typedConversationHistory.slice(-20).map((msg: { isUser: boolean; content: string }) => ({
         role: msg.isUser ? 'user' : 'assistant',
         content: msg.content,
       })),
