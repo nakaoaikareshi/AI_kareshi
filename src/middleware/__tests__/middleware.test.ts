@@ -126,7 +126,7 @@ describe('Middleware', () => {
       mockGetToken.mockResolvedValue({
         sub: 'user-123',
         nickname: 'TestUser'
-      } as any);
+      });
       
       const request = createMockRequest('POST', '/api/chat');
       const response = await middleware(request);
@@ -172,7 +172,7 @@ describe('Middleware', () => {
     });
 
     it('should allow POST requests from same origin', async () => {
-      mockGetToken.mockResolvedValue({ sub: 'user-123' } as any);
+      mockGetToken.mockResolvedValue({ sub: 'user-123' });
       
       const request = createMockRequest(
         'POST',

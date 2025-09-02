@@ -41,7 +41,7 @@ afterAll(() => {
   process.env = originalEnv;
 });
 
-const mockRequest = (body: any) => {
+const mockRequest = (body: unknown) => {
   const request = {
     json: jest.fn().mockResolvedValue(body),
     headers: {

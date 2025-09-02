@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (error: unknown) {
       // Handle specific database errors
-      if (error.code === 'P2002') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
         return NextResponse.json(
           { 
             success: false,

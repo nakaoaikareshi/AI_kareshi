@@ -7,7 +7,7 @@ jest.mock('@/lib/database');
 const mockDatabaseService = DatabaseService as jest.Mocked<typeof DatabaseService>;
 
 // Mock NextRequest
-const mockRequest = (body: any) => {
+const mockRequest = (body: unknown) => {
   const request = {
     json: jest.fn().mockResolvedValue(body),
   } as unknown as NextRequest;
@@ -160,7 +160,7 @@ describe('POST /api/auth/signup', () => {
       };
 
       const duplicateError = new Error('Unique constraint violation');
-      (duplicateError as any).code = 'P2002';
+      Object.assign(duplicateError, { code: 'P2002' });
       mockDatabaseService.createUser.mockRejectedValue(duplicateError);
 
       const request = mockRequest(userData);
