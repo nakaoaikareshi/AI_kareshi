@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
       // Log error without exposing sensitive information
       console.error('User creation failed:', {
         email,
-        error: error.message,
-        code: error.code
+        error: error && typeof error === 'object' && 'message' in error ? error.message : 'Unknown error',
+        code: error && typeof error === 'object' && 'code' in error ? error.code : 'UNKNOWN'
       });
       
       return NextResponse.json(
