@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, X } from 'lucide-react';
+import { ShoppingBag, X, Star } from 'lucide-react';
 import { StoreItem, Character } from '@/types';
 
 interface StoreModalProps {
@@ -126,7 +126,7 @@ const getMockItems = (gender: 'boyfriend' | 'girlfriend'): StoreItem[] => {
   }
 };
 
-export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, character, onPurchase }) => {
+export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, character }) => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'hair' | 'outfit' | 'accessories'>('all');
   const [cart, setCart] = useState<string[]>([]);
   const [purchasedItems, setPurchasedItems] = useState<string[]>(() => {
@@ -181,8 +181,8 @@ export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, charact
   const isPurchased = (itemId: string) => purchasedItems.includes(itemId);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden shadow-xl">
         <div className="flex justify-between items-center p-4 border-b">
           <div className="flex items-center space-x-2">
             <ShoppingBag size={20} />
@@ -214,8 +214,8 @@ export const StoreModal: React.FC<StoreModalProps> = ({ isOpen, onClose, charact
           ))}
         </div>
 
-        <div className="p-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-3 sm:p-4 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {filteredItems.map(item => (
               <div key={item.id} className={`border rounded-lg p-3 ${isPurchased(item.id) ? 'bg-green-50 border-green-200' : ''}`}>
                 <div className="aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center relative">

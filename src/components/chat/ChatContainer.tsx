@@ -189,10 +189,10 @@ export const ChatContainer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-screen bg-gray-100 chat-container">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center space-x-3">
+      <div className="bg-white border-b px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
           {character.avatar ? (
             <AnimeAvatar 
               avatar={character.avatar} 
@@ -200,74 +200,74 @@ export const ChatContainer: React.FC = () => {
               mood={moodState?.currentMood || 50}
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
               💕
             </div>
           )}
-          <div>
-            <h1 className="font-bold text-gray-900 text-lg">{character.nickname}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-bold text-gray-900 text-base sm:text-lg truncate">{character.nickname}</h1>
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <p className="text-sm text-green-600 font-medium">オンライン</p>
+              <p className="text-xs sm:text-sm text-green-600 font-medium">オンライン</p>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-0.5 sm:space-x-1 flex-shrink-0">
           <button
             onClick={() => setShowVideoCall(true)}
-            className="p-2 text-purple-500 hover:bg-purple-50 rounded-full"
+            className="p-1.5 sm:p-2 text-purple-500 hover:bg-purple-50 rounded-full transition-colors"
             title="ビデオ通話"
           >
-            <Video size={20} />
+            <Video size={16} className="sm:w-5 sm:h-5" />
           </button>
           <button
             onClick={() => setShowSchedule(true)}
-            className="p-2 text-green-500 hover:bg-green-50 rounded-full"
+            className="p-1.5 sm:p-2 text-green-500 hover:bg-green-50 rounded-full transition-colors"
             title="スケジュール"
           >
-            📅
+            <span className="text-sm sm:text-base">📅</span>
           </button>
           <button
             onClick={() => setShowMemories(true)}
-            className="p-2 text-purple-500 hover:bg-purple-50 rounded-full"
+            className="p-1.5 sm:p-2 text-purple-500 hover:bg-purple-50 rounded-full transition-colors"
             title="思い出"
           >
-            📸
+            <span className="text-sm sm:text-base">📸</span>
           </button>
           <button
             onClick={() => setShowGift(true)}
-            className="p-2 text-pink-500 hover:bg-pink-50 rounded-full"
+            className="p-1.5 sm:p-2 text-pink-500 hover:bg-pink-50 rounded-full transition-colors"
             title="プレゼント"
           >
-            <Gift size={20} />
+            <Gift size={16} className="sm:w-5 sm:h-5" />
           </button>
           <button
             onClick={() => setShowDate(true)}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+            className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
             title="デート"
           >
-            <Heart size={20} />
+            <Heart size={16} className="sm:w-5 sm:h-5" />
           </button>
           <button
             onClick={() => setShowStore(true)}
-            className="p-2 text-blue-500 hover:bg-blue-50 rounded-full"
+            className="p-1.5 sm:p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
             title="ショップ"
           >
-            <ShoppingBag size={20} />
+            <ShoppingBag size={16} className="sm:w-5 sm:h-5" />
           </button>
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 text-gray-500 hover:bg-gray-50 rounded-full"
+            className="p-1.5 sm:p-2 text-gray-500 hover:bg-gray-50 rounded-full transition-colors"
             title="設定"
           >
-            <Settings size={20} />
+            <Settings size={16} className="sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 bg-gradient-to-b from-gray-50 to-gray-100">
         {/* 気分状態表示 */}
         {moodState && (
           <MoodIndicator moodState={moodState} characterName={character.nickname} />

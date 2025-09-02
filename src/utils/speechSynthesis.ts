@@ -106,7 +106,7 @@ export class SpeechSynthesisManager {
     return this.synth.getVoices();
   }
 
-  getCharacterVoice(gender: 'boyfriend' | 'girlfriend'): SpeechSynthesisVoice | null {
+  getCharacterVoice(gender: 'boyfriend' | 'girlfriend', personality?: { kindness: number; activeness: number }): SpeechSynthesisVoice | null {
     const voices = this.getJapaneseVoices();
     
     if (gender === 'girlfriend') {
@@ -124,6 +124,40 @@ export class SpeechSynthesisManager {
         voice.name.includes('Ichiro')
       ) || voices[0] || null;
     }
+  }
+
+  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: any }, options: {
+    onStart?: () => void;
+    onEnd?: () => void;
+    onError?: (error: SpeechSynthesisErrorEvent) => void;
+  } = {}): void {
+    const voice = this.getCharacterVoice(character.gender, character.personality);
+    
+    // 性格に応じた音声設定
+    let rate = 1.0;
+    let pitch = 1.0;
+    
+    // 積極性による話速調整
+    if (character.personality.activeness >= 70) {
+      rate = 1.1; // 少し早め
+    } else if (character.personality.activeness <= 30) {
+      rate = 0.9; // 少し遅め
+    }
+    
+    // 優しさによる音程調整
+    if (character.personality.kindness >= 70) {
+      pitch = character.gender === 'girlfriend' ? 1.1 : 0.9; // 優しい調子
+    } else if (character.personality.kindness <= 30) {
+      pitch = character.gender === 'girlfriend' ? 0.9 : 1.1; // クールな調子
+    }
+    
+    this.speak(text, {
+      voice: voice?.name,
+      rate,
+      pitch,
+      volume: 0.8,
+      ...options
+    });
   }
 }
 

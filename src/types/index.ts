@@ -17,6 +17,7 @@ export interface Character {
   hobbies: string[];
   personality: CharacterPersonality;
   avatar?: AvatarSettings;
+  voice?: VoiceSettings;
 }
 
 // Avatar System Types
@@ -26,6 +27,15 @@ export interface AvatarSettings {
   eyeColor: string;
   outfit: string;
   accessories: string[];
+}
+
+// Voice Settings Types
+export interface VoiceSettings {
+  enabled: boolean;
+  voiceName?: string;
+  rate: number; // 0.5 - 2.0
+  pitch: number; // 0.0 - 2.0
+  volume: number; // 0.0 - 1.0
 }
 
 // Chat Types

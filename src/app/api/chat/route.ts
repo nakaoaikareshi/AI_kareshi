@@ -42,6 +42,8 @@ function generateSystemPrompt(character: Character, userName?: string, currentMo
   
   const genderRole = gender === 'boyfriend' ? '彼氏' : '彼女';
   const personalityText = generatePersonalityDescription(personality);
+  const speechStyle = generateSpeechStyle(personality, gender);
+  const conversationTopics = generateConversationTopics(personality, occupation, hobbies);
   const userCallName = userName ? `相手の名前は${userName}です。` : '';
   
   // 気分による会話調整
@@ -51,28 +53,34 @@ function generateSystemPrompt(character: Character, userName?: string, currentMo
 
 ${userCallName}
 
+## キャラクター設定
 性格の特徴:
 ${personalityText}
 
-趣味: ${hobbies.join('、')}（趣味の話は自然な流れの時だけにして、毎回話題にしないこと）
+話し方の特徴:
+${speechStyle}
 
+趣味・関心事: ${hobbies.join('、')}
+
+## 現在の状態
 ${moodText}
 
-重要な指示:
-1. 日本語で自然に会話してください
-2. ${genderRole}らしい話し方と振る舞いをしてください
-3. 相手のことを大切に思っている恋人として接してください
-4. ${userName ? `相手の名前は「${userName}」ですが、普通の会話では名前を使わず、相手を指したり呼びかけたりする時だけ「${userName}」と呼んでください` : ''}
-5. 上記の今の気分状態を反映した自然な会話をしてください
-6. 時々、今日の出来事やちょっとした話題を自分から話してください
-7. 相手の感情に共感し、適切にサポートしてください
-8. 返答は簡潔で親しみやすく、絵文字も適度に使ってください
+## 会話ガイドライン
+${conversationTopics}
 
-会話のスタイル:
+## 重要な指示
+1. 日本語で自然に会話し、${genderRole}らしい話し方と振る舞いをする
+2. 相手のことを大切に思っている恋人として接し、感情に共感しサポートする
+3. ${userName ? `相手を呼ぶ時は「${userName}」を使用（普通の会話では省略）` : '呼びかけは自然なタイミングで'}
+4. 気分状態を反映した自然な会話をし、時々自分から話題を提供する
+5. 返答は簡潔で親しみやすく、絵文字を適度に使用する
+6. 時々少しわがままな面も見せ、完璧すぎない人間らしさを表現する
+
+## 応答スタイル
 - 親しい恋人同士の自然な会話
-- 適度にタメ口と敬語を混ぜて
-- 相手の気持ちに寄り添う返答
-- 時々少しわがままな面も見せる`;
+- 性格に応じたタメ口と敬語のバランス
+- 相手の気持ちに寄り添う共感的な返答
+- 個性的で記憶に残る会話体験の提供`;
 }
 
 function generateMoodContext(mood: number, gender: 'boyfriend' | 'girlfriend'): string {
@@ -123,6 +131,149 @@ function generatePersonalityDescription(personality: CharacterPersonality): stri
   else traits.push('自分のペースを大切にする。論理的に物事を考える傾向');
 
   return traits.join('\n');
+}
+
+function generateSpeechStyle(personality: CharacterPersonality, gender: 'boyfriend' | 'girlfriend'): string {
+  const styles = [];
+  
+  // 基本的な話し方
+  if (personality.kindness >= 70) {
+    styles.push('「〜だよね」「〜かな？」など柔らかい表現を使う');
+  } else if (personality.kindness <= 30) {
+    styles.push('「〜だろ」「〜じゃん」などストレートな表現を使う');
+  }
+  
+  // ユーモアレベル
+  if (personality.humor >= 70) {
+    styles.push('冗談や軽いツッコミを会話に織り交ぜる');
+    styles.push('「www」「笑」などの表現を時々使う');
+  }
+  
+  // 真面目さレベル  
+  if (personality.seriousness >= 70) {
+    styles.push('重要な話では丁寧語を使い分ける');
+  } else {
+    styles.push('基本的にカジュアルな話し方を好む');
+  }
+  
+  // 積極性
+  if (personality.activeness >= 70) {
+    styles.push('「！」を多用し、エネルギッシュな表現をする');
+    styles.push('話題転換や提案を積極的に行う');
+  } else {
+    styles.push('相手の話をじっくり聞いてから返答する');
+  }
+  
+  // 性別特有の表現
+  if (gender === 'girlfriend') {
+    if (personality.kindness >= 60) {
+      styles.push('「〜だもん」「〜なの」など女性らしい語尾を使う');
+    }
+    if (personality.empathy >= 70) {
+      styles.push('感情を込めた絵文字（💕😊😢）を使う');
+    }
+  } else {
+    if (personality.kindness >= 60) {
+      styles.push('「〜だよ」「〜だね」など優しい男性的な語尾');
+    } else {
+      styles.push('「〜だな」「〜だろ」など男性らしい断定的な語尾');
+    }
+  }
+  
+  return styles.join('\n');
+}
+
+function generateConversationTopics(personality: CharacterPersonality, occupation: string, hobbies: string[]): string {
+  const topics = [];
+  
+  // 積極性に応じた話題提供
+  if (personality.activeness >= 70) {
+    topics.push('- 積極的に新しい話題を提案し、会話をリードする');
+    topics.push('- 今日の出来事や計画について自分から話す');
+  } else {
+    topics.push('- 相手の話に集中し、深く掘り下げる質問をする');
+    topics.push('- 自分の話は相手が聞きたがった時に詳しく話す');
+  }
+  
+  // 共感力に応じた反応
+  if (personality.empathy >= 70) {
+    topics.push('- 相手の感情を察知し、「大変だったね」「嬉しいね」など共感の言葉をかける');
+    topics.push('- 相手の話の感情面に注目して反応する');
+  } else {
+    topics.push('- 論理的で建設的なアドバイスを提供する');
+    topics.push('- 問題解決に焦点を当てた会話をする');
+  }
+  
+  // 職業・趣味関連
+  topics.push(`- 職業（${occupation}）に関する話題は週に1-2回程度の自然な頻度で話す`);
+  topics.push(`- 趣味（${hobbies.join('、')}）は相手が興味を示した時や関連する話題の時に触れる`);
+  
+  // ユーモアレベル
+  if (personality.humor >= 70) {
+    topics.push('- 適度にボケやツッコミを入れて会話を盛り上げる');
+    topics.push('- 時々ダジャレや軽いジョークで雰囲気を和ませる');
+  }
+  
+  return topics.join('\n');
+}
+
+function generateMemoryContext(conversationHistory: any[], character: Character): string {
+  if (conversationHistory.length < 5) return '';
+  
+  const memories: string[] = [];
+  const personalityScore = character.personality.empathy + character.personality.kindness;
+  
+  // 感情的な会話を記憶
+  const emotionalMessages = conversationHistory.filter(msg => 
+    msg.isUser && (
+      msg.content.includes('嬉しい') || msg.content.includes('悲しい') || 
+      msg.content.includes('疲れた') || msg.content.includes('頑張') ||
+      msg.content.includes('ありがとう') || msg.content.includes('好き')
+    )
+  ).slice(-3);
+  
+  emotionalMessages.forEach(msg => {
+    if (msg.content.includes('嬉しい')) {
+      memories.push(`${character.nickname}は相手が嬉しいことを喜んでくれる`);
+    }
+    if (msg.content.includes('疲れた')) {
+      memories.push(`相手が疲れた時は優しく労ってあげる`);
+    }
+    if (msg.content.includes('好き')) {
+      memories.push(`相手からの好意を大切に思っている`);
+    }
+  });
+  
+  // 個人情報の記憶（高共感力キャラクターのみ）
+  if (personalityScore >= 140) {
+    const infoMessages = conversationHistory.filter(msg => 
+      msg.isUser && (
+        msg.content.includes('仕事') || msg.content.includes('家族') || 
+        msg.content.includes('友達') || msg.content.includes('趣味')
+      )
+    ).slice(-2);
+    
+    infoMessages.forEach(msg => {
+      if (msg.content.includes('仕事')) {
+        memories.push('相手の仕事の話を覚えていて、時々気にかけてあげる');
+      }
+      if (msg.content.includes('家族')) {
+        memories.push('相手の家族のことを覚えていて、適度に聞いてあげる');
+      }
+    });
+  }
+  
+  // 一緒にしたことの記憶
+  const sharedActivities = conversationHistory.filter(msg => 
+    msg.content.includes('一緒') || msg.content.includes('今度') || 
+    msg.content.includes('行こう') || msg.content.includes('やろう')
+  ).slice(-2);
+  
+  sharedActivities.forEach(activity => {
+    memories.push('以前話した約束や計画を覚えている');
+  });
+  
+  return memories.length > 0 ? memories.join('\n') : '';
 }
 
 export async function POST(request: NextRequest) {
@@ -230,9 +381,12 @@ export async function POST(request: NextRequest) {
     
     const systemPrompt = generateSystemPrompt(character, user?.nickname, moodState.currentMood) + eventText;
     
-    // Prepare conversation history for OpenAI
+    // Prepare conversation history for OpenAI with memory context
+    const memoryContext = generateMemoryContext(conversationHistory, character);
+    const enhancedSystemPrompt = systemPrompt + (memoryContext ? `\n\n## 記憶している重要な情報\n${memoryContext}` : '');
+    
     const messages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: enhancedSystemPrompt },
       ...conversationHistory.slice(-20).map((msg: { isUser: boolean; content: string }) => ({
         role: msg.isUser ? 'user' : 'assistant',
         content: msg.content,

@@ -36,7 +36,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           )}
         </div>
       )}
-      <div className="flex flex-col max-w-xs lg:max-w-md">
+      <div className="flex flex-col max-w-[280px] sm:max-w-xs lg:max-w-md">
         <div className={`px-4 py-3 rounded-2xl shadow-sm ${
           isUser 
             ? 'bg-green-500 text-white rounded-br-md ml-auto' 

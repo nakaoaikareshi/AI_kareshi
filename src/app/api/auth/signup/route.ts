@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, name, nickname } = sanitizedData;
+    const { email, password, name, nickname } = validation.data;
 
     try {
       const user = await DatabaseService.createUser({

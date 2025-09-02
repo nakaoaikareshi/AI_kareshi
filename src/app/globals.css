@@ -39,3 +39,50 @@ body {
 .animate-slide-down {
   animation: slide-down 0.3s ease-out;
 }
+
+/* タブレット専用最適化 */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .modal-content {
+    max-width: 500px;
+  }
+  
+  .header-buttons {
+    gap: 0.75rem;
+  }
+  
+  .chat-message {
+    max-width: 400px;
+  }
+}
+
+/* モバイル最適化 */
+@media (max-width: 640px) {
+  .modal-content {
+    margin: 1rem;
+    max-height: 90vh;
+  }
+  
+  .chat-input {
+    padding: 0.75rem;
+  }
+  
+  .header-compact {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* 安全エリア対応（iPhoneなど） */
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+}

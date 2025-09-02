@@ -31,28 +31,23 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({ text, messageId }) =
       speechSynthesis.resume();
       setIsPaused(false);
     } else {
-      const characterVoice = character ? 
-        speechSynthesis.getCharacterVoice(character.gender) : null;
-
-      speechSynthesis.speak(text, {
-        voice: characterVoice?.name,
-        rate: character?.gender === 'girlfriend' ? 1.1 : 0.9,
-        pitch: character?.gender === 'girlfriend' ? 1.2 : 0.8,
-        volume: 0.8,
-        onStart: () => {
-          setIsPlaying(true);
-          setIsPaused(false);
-        },
-        onEnd: () => {
-          setIsPlaying(false);
-          setIsPaused(false);
-        },
-        onError: (error) => {
-          console.error('Speech synthesis error:', error);
-          setIsPlaying(false);
-          setIsPaused(false);
-        }
-      });
+      if (character) {
+        speechSynthesis.speakWithPersonality(text, character, {
+          onStart: () => {
+            setIsPlaying(true);
+            setIsPaused(false);
+          },
+          onEnd: () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+          },
+          onError: (error) => {
+            console.error('Speech synthesis error:', error);
+            setIsPlaying(false);
+            setIsPaused(false);
+          }
+        });
+      }
     }
   };
 
