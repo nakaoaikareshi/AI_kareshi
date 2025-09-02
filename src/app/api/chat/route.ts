@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { Character, CharacterPersonality } from '@/types';
+import { Character, CharacterPersonality, Message } from '@/types';
 import { MoodSystem } from '@/utils/moodSystem';
 import { DailyEventGenerator } from '@/utils/dailyEvents';
 import { RefusalSystem } from '@/utils/refusalSystem';
