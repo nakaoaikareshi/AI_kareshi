@@ -101,7 +101,7 @@ export function sanitizeString(input: string): string {
     .substring(0, 1000); // Limit length
 }
 
-export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
+export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
   const sanitized = { ...obj };
   
   for (const key in sanitized) {

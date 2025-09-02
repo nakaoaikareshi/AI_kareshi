@@ -26,14 +26,14 @@ interface SpeechRecognitionResultList {
 
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
   }
 }
 
 export class SpeechRecognitionManager {
   private static instance: SpeechRecognitionManager;
-  private recognition: any;
+  private recognition: SpeechRecognition;
   private isSupported: boolean;
 
   private constructor() {

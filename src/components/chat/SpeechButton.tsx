@@ -8,7 +8,7 @@ interface SpeechButtonProps {
   messageId?: string;
 }
 
-export const SpeechButton: React.FC<SpeechButtonProps> = ({ text, messageId }) => {
+export const SpeechButton: React.FC<SpeechButtonProps> = ({ text }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const { character } = useCharacterStore();

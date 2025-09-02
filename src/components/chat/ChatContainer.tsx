@@ -10,18 +10,17 @@ import { SettingsModal } from '@/components/settings/SettingsModal';
 import { StoreModal } from '@/components/store/StoreModal';
 import { DateModal } from '@/components/date/DateModal';
 import { GiftModal } from '@/components/gift/GiftModal';
-import { SimpleAvatar } from '@/components/avatar/SimpleAvatar';
 import { MemoryAlbum } from '@/components/memories/MemoryAlbum';
 import { ScheduleModal } from '@/components/schedule/ScheduleModal';
 import { MoodIndicator } from './MoodIndicator';
-import { MoodSystem } from '@/utils/moodSystem';
 import { DailyEventNotification } from './DailyEventNotification';
 import { AnimeAvatar } from '@/components/avatar/AnimeAvatar';
 import { VideoCallModal } from '@/components/video/VideoCallModal';
+import { speechSynthesis } from '@/utils/speechSynthesis';
 
 export const ChatContainer: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, isLoading, addMessage, setLoading, loadConversation, markMessagesAsRead } = useChatStore();
+  const { messages, isLoading, addMessage, setLoading, markMessagesAsRead } = useChatStore();
   const { character } = useCharacterStore();
   const { user } = useUserStore();
   const [showSettings, setShowSettings] = useState(false);
@@ -32,6 +31,8 @@ export const ChatContainer: React.FC = () => {
   const [showSchedule, setShowSchedule] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [moodState, setMoodState] = useState(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentEmotion, setCurrentEmotion] = useState<'happy' | 'sad' | 'surprised' | 'angry' | 'love' | 'normal'>('normal');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,14 +42,49 @@ export const ChatContainer: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  // 音声合成の状態監視
+  useEffect(() => {
+    const checkSpeakingStatus = () => {
+      setIsSpeaking(speechSynthesis.isSpeaking());
+    };
+
+    const interval = setInterval(checkSpeakingStatus, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  // メッセージ内容に基づく感情分析
+  useEffect(() => {
+    if (messages.length === 0) return;
+    
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && !lastMessage.isUser) {
+      const content = lastMessage.content.toLowerCase();
+      
+      if (content.includes('嬉しい') || content.includes('やったー') || content.includes('最高')) {
+        setCurrentEmotion('happy');
+      } else if (content.includes('好き') || content.includes('愛してる') || content.includes('💕')) {
+        setCurrentEmotion('love');
+      } else if (content.includes('悲しい') || content.includes('つらい') || content.includes('😢')) {
+        setCurrentEmotion('sad');
+      } else if (content.includes('えっ') || content.includes('本当') || content.includes('驚')) {
+        setCurrentEmotion('surprised');
+      } else if (content.includes('怒') || content.includes('むかつく') || content.includes('💢')) {
+        setCurrentEmotion('angry');
+      } else {
+        setCurrentEmotion('normal');
+      }
+      
+      // 3秒後に通常の表情に戻る
+      setTimeout(() => setCurrentEmotion('normal'), 3000);
+    }
+  }, [messages]);
+
   // Load conversation when component mounts
   useEffect(() => {
     if (character) {
-      // データベースエラーを避けるため、ローカルのみで気分状態を取得
       fetchMoodState();
-      // 会話履歴の読み込みはスキップ（後で修正予定）
     }
-  }, [character]);
+  }, [character, fetchMoodState]);
 
   const fetchMoodState = async () => {
     if (!character) return;
@@ -198,6 +234,9 @@ export const ChatContainer: React.FC = () => {
               avatar={character.avatar} 
               size="small" 
               mood={moodState?.currentMood || 50}
+              isSpeaking={isSpeaking}
+              isBlinking={true}
+              emotionState={currentEmotion}
             />
           ) : (
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">

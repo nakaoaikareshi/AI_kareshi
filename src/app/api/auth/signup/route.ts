@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/lib/database';
-import { validateInput, signupSchema, sanitizeObject } from '@/utils/validation';
+import { validateInput, signupSchema } from '@/utils/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         },
         message: 'User created successfully'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle specific database errors
       if (error.code === 'P2002') {
         return NextResponse.json(

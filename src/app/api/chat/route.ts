@@ -217,7 +217,7 @@ function generateConversationTopics(personality: CharacterPersonality, occupatio
   return topics.join('\n');
 }
 
-function generateMemoryContext(conversationHistory: any[], character: Character): string {
+function generateMemoryContext(conversationHistory: Message[], character: Character): string {
   if (conversationHistory.length < 5) return '';
   
   const memories: string[] = [];

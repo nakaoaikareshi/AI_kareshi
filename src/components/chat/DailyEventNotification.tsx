@@ -26,7 +26,7 @@ export const DailyEventNotification: React.FC<DailyEventNotificationProps> = ({
     }, 10000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [checkForDailyEvent]);
 
   const checkForDailyEvent = () => {
     const event = DailyEventGenerator.generateDailyEvent(character.occupation);

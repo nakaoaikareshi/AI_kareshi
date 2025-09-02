@@ -14,7 +14,7 @@ export interface LogContext {
   userAgent?: string;
   endpoint?: string;
   method?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LogEntry {
@@ -49,7 +49,7 @@ class Logger {
     return level >= this.minLevel;
   }
 
-  private sanitizeError(error: any): LogEntry['error'] {
+  private sanitizeError(error: unknown): LogEntry['error'] {
     if (!error) return undefined;
 
     const sanitized: LogEntry['error'] = {
@@ -160,7 +160,7 @@ class Logger {
     });
   }
 
-  warn(message: string, context?: LogContext, error?: any): void {
+  warn(message: string, context?: LogContext, error?: unknown): void {
     if (!this.shouldLog(LogLevel.WARN)) return;
     
     this.writeLog({
@@ -172,7 +172,7 @@ class Logger {
     });
   }
 
-  error(message: string, context?: LogContext, error?: any): void {
+  error(message: string, context?: LogContext, error?: unknown): void {
     if (!this.shouldLog(LogLevel.ERROR)) return;
     
     this.writeLog({
@@ -184,7 +184,7 @@ class Logger {
     });
   }
 
-  fatal(message: string, context?: LogContext, error?: any): void {
+  fatal(message: string, context?: LogContext, error?: unknown): void {
     if (!this.shouldLog(LogLevel.FATAL)) return;
     
     this.writeLog({

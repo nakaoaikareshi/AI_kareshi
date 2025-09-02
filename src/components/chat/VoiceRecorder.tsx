@@ -31,7 +31,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         clearInterval(timerRef.current);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, stopRecording]);
 
   const startRecording = async () => {
     try {

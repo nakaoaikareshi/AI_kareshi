@@ -1,10 +1,12 @@
 export class SpeechSynthesisManager {
   private static instance: SpeechSynthesisManager;
-  private synth: SpeechSynthesis;
+  private synth: SpeechSynthesis | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
 
   private constructor() {
-    this.synth = window.speechSynthesis;
+    if (typeof window !== 'undefined') {
+      this.synth = window.speechSynthesis;
+    }
   }
 
   static getInstance(): SpeechSynthesisManager {
@@ -23,6 +25,8 @@ export class SpeechSynthesisManager {
     onEnd?: () => void;
     onError?: (error: SpeechSynthesisErrorEvent) => void;
   } = {}): void {
+    if (!this.synth) return;
+    
     if (this.currentUtterance) {
       this.stop();
     }
@@ -66,34 +70,34 @@ export class SpeechSynthesisManager {
     };
 
     this.currentUtterance = utterance;
-    this.synth.speak(utterance);
+    this.synth?.speak(utterance);
   }
 
   stop(): void {
-    if (this.currentUtterance) {
+    if (this.currentUtterance && this.synth) {
       this.synth.cancel();
       this.currentUtterance = null;
     }
   }
 
   pause(): void {
-    if (this.synth.speaking && !this.synth.paused) {
+    if (this.synth?.speaking && !this.synth.paused) {
       this.synth.pause();
     }
   }
 
   resume(): void {
-    if (this.synth.paused) {
+    if (this.synth?.paused) {
       this.synth.resume();
     }
   }
 
   isSpeaking(): boolean {
-    return this.synth.speaking;
+    return this.synth?.speaking || false;
   }
 
   isPaused(): boolean {
-    return this.synth.paused;
+    return this.synth?.paused || false;
   }
 
   getJapaneseVoices(): SpeechSynthesisVoice[] {
@@ -126,7 +130,7 @@ export class SpeechSynthesisManager {
     }
   }
 
-  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: any }, options: {
+  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: Record<string, number> }, options: {
     onStart?: () => void;
     onEnd?: () => void;
     onError?: (error: SpeechSynthesisErrorEvent) => void;

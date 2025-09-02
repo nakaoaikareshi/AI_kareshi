@@ -19,7 +19,6 @@ export const AnimatedAvatar: React.FC<AnimatedAvatarProps> = ({
 }) => {
   const [currentMood, setCurrentMood] = useState(mood);
   const [isEyesClosed, setIsEyesClosed] = useState(false);
-  const [mouthAnimation, setMouthAnimation] = useState(0);
 
   // まばたきアニメーション
   useEffect(() => {

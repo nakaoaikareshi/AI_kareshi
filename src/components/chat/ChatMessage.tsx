@@ -28,6 +28,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               avatar={character.avatar} 
               size="small"
               mood={50}
+              isSpeaking={false}
+              isBlinking={true}
+              emotionState="normal"
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
@@ -61,7 +64,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           </div>
           
           {!isUser && (
-            <SpeechButton text={message.content} messageId={message.id} />
+            <SpeechButton text={message.content} />
           )}
         </div>
       </div>

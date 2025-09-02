@@ -1,24 +1,79 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AvatarSettings } from '@/types';
 
 interface AnimeAvatarProps {
   avatar: AvatarSettings;
   size?: 'small' | 'medium' | 'large';
   mood?: number;
+  isSpeaking?: boolean;
+  isBlinking?: boolean;
+  emotionState?: 'happy' | 'sad' | 'surprised' | 'angry' | 'love' | 'normal';
 }
 
 export const AnimeAvatar: React.FC<AnimeAvatarProps> = ({ 
   avatar, 
   size = 'medium',
-  mood = 50 
+  mood = 50,
+  isSpeaking = false,
+  isBlinking = true,
+  emotionState = 'normal'
 }) => {
+  const [currentBlink, setCurrentBlink] = useState(false);
+  const [lipSyncFrame, setLipSyncFrame] = useState(0);
+  const [idleAnimation, setIdleAnimation] = useState(0);
+  const [emotionTransition, setEmotionTransition] = useState(1);
   const sizeMap = {
     small: { width: 48, height: 48, scale: 0.5 },
     medium: { width: 96, height: 96, scale: 1 },
     large: { width: 192, height: 192, scale: 2 },
   };
 
-  const { width, height, scale } = sizeMap[size];
+  const { width, height } = sizeMap[size];
+
+  // まばたきアニメーション
+  useEffect(() => {
+    if (!isBlinking) return;
+
+    const blinkInterval = setInterval(() => {
+      setCurrentBlink(true);
+      setTimeout(() => setCurrentBlink(false), 150);
+    }, 2000 + Math.random() * 3000);
+
+    return () => clearInterval(blinkInterval);
+  }, [isBlinking]);
+
+  // リップシンクアニメーション
+  useEffect(() => {
+    if (!isSpeaking) {
+      setLipSyncFrame(0);
+      return;
+    }
+
+    const lipSyncInterval = setInterval(() => {
+      setLipSyncFrame(prev => (prev + 1) % 4);
+    }, 200);
+
+    return () => clearInterval(lipSyncInterval);
+  }, [isSpeaking]);
+
+  // アイドルアニメーション
+  useEffect(() => {
+    const idleInterval = setInterval(() => {
+      setIdleAnimation(prev => (prev + 1) % 360);
+    }, 100);
+
+    return () => clearInterval(idleInterval);
+  }, []);
+
+  // 感情遷移アニメーション
+  useEffect(() => {
+    setEmotionTransition(0);
+    const transitionTimer = setTimeout(() => {
+      setEmotionTransition(1);
+    }, 50);
+
+    return () => clearTimeout(transitionTimer);
+  }, [emotionState]);
 
   const getHairColor = (color: string) => {
     const colors = {
@@ -62,36 +117,100 @@ export const AnimeAvatar: React.FC<AnimeAvatarProps> = ({
     return outfits[outfit as keyof typeof outfits] || '#6B7280';
   };
 
-  // 気分に基づいた表情
-  const getEyeExpression = (mood: number) => {
-    if (mood >= 70) return { eyeHeight: 6, eyebrowY: 8 }; // 嬉しい
-    if (mood >= 40) return { eyeHeight: 5, eyebrowY: 10 }; // 普通
-    if (mood >= 10) return { eyeHeight: 4, eyebrowY: 12 }; // 普通
-    if (mood >= -20) return { eyeHeight: 3, eyebrowY: 14 }; // 少し疲れ
-    return { eyeHeight: 2, eyebrowY: 16 }; // 落ち込み
+  // アニメーション対応の表情システム
+  const getAnimatedEyeExpression = (mood: number, emotionState: string, isBlink: boolean) => {
+    if (isBlink) return { eyeHeight: 0.5, eyebrowY: 12 };
+    
+    const baseExpression = (() => {
+      switch (emotionState) {
+        case 'happy': return { eyeHeight: 7, eyebrowY: 6 };
+        case 'love': return { eyeHeight: 6, eyebrowY: 8, sparkle: true };
+        case 'surprised': return { eyeHeight: 8, eyebrowY: 5 };
+        case 'sad': return { eyeHeight: 2, eyebrowY: 16 };
+        case 'angry': return { eyeHeight: 3, eyebrowY: 14, tilt: true };
+        default:
+          if (mood >= 70) return { eyeHeight: 6, eyebrowY: 8 };
+          if (mood >= 40) return { eyeHeight: 5, eyebrowY: 10 };
+          if (mood >= 10) return { eyeHeight: 4, eyebrowY: 12 };
+          if (mood >= -20) return { eyeHeight: 3, eyebrowY: 14 };
+          return { eyeHeight: 2, eyebrowY: 16 };
+      }
+    })();
+
+    // アイドルアニメーション微調整
+    const idleOffset = Math.sin(idleAnimation * 0.05) * 0.5;
+    return {
+      ...baseExpression,
+      eyeHeight: baseExpression.eyeHeight + idleOffset,
+      eyebrowY: baseExpression.eyebrowY - idleOffset * 0.5
+    };
   };
 
-  const getMouthExpression = (mood: number) => {
-    if (mood >= 70) return { path: 'M 15 25 Q 25 30 35 25', color: '#FF69B4' }; // 笑顔
-    if (mood >= 40) return { path: 'M 18 27 Q 25 29 32 27', color: '#F87171' }; // 微笑み
-    if (mood >= 10) return { path: 'M 20 28 L 30 28', color: '#9CA3AF' }; // 普通
-    if (mood >= -20) return { path: 'M 18 30 Q 25 28 32 30', color: '#6B7280' }; // 少し下向き
-    return { path: 'M 15 32 Q 25 28 35 32', color: '#9CA3AF' }; // 悲しい
+  const getAnimatedMouthExpression = (mood: number, emotionState: string, lipSync: number) => {
+    // リップシンク用の口の形
+    if (isSpeaking) {
+      const syncPaths = [
+        'M 20 28 L 30 28', // 閉じ
+        'M 18 27 Q 25 29 32 27', // 微開
+        'M 16 26 Q 25 30 34 26', // 開
+        'M 20 27 Q 25 29 30 27', // 中間
+      ];
+      return { path: syncPaths[lipSync], color: '#FF69B4' };
+    }
+
+    // 感情に基づく口の表情
+    switch (emotionState) {
+      case 'happy':
+        return { path: 'M 15 25 Q 25 31 35 25', color: '#FF69B4' }; // 大きな笑顔
+      case 'love':
+        return { path: 'M 17 26 Q 25 30 33 26', color: '#FF1493' }; // 愛らしい笑顔
+      case 'surprised':
+        return { path: 'M 22 27 Q 25 30 28 27', color: '#FF6347' }; // 驚き
+      case 'sad':
+        return { path: 'M 18 32 Q 25 29 32 32', color: '#9CA3AF' }; // 悲しい
+      case 'angry':
+        return { path: 'M 18 30 L 32 30', color: '#DC143C' }; // 怒り
+      default:
+        // 気分ベース
+        if (mood >= 70) return { path: 'M 15 25 Q 25 30 35 25', color: '#FF69B4' };
+        if (mood >= 40) return { path: 'M 18 27 Q 25 29 32 27', color: '#F87171' };
+        if (mood >= 10) return { path: 'M 20 28 L 30 28', color: '#9CA3AF' };
+        if (mood >= -20) return { path: 'M 18 30 Q 25 28 32 30', color: '#6B7280' };
+        return { path: 'M 15 32 Q 25 28 35 32', color: '#9CA3AF' };
+    }
   };
 
-  const eyeExpr = getEyeExpression(mood);
-  const mouthExpr = getMouthExpression(mood);
+  const eyeExpr = getAnimatedEyeExpression(mood, emotionState, currentBlink);
+  const mouthExpr = getAnimatedMouthExpression(mood, emotionState, lipSyncFrame);
   const hairColor = getHairColor(avatar.hairColor);
   const eyeColor = getEyeColor(avatar.eyeColor);
   const outfitColor = getOutfitColor(avatar.outfit);
 
+  // アニメーション用の動的計算
+  const breathingOffset = Math.sin(idleAnimation * 0.02) * 0.5;
+  const headTilt = Math.sin(idleAnimation * 0.03) * 0.8;
+
   return (
-    <div style={{ width, height }} className="relative">
+    <div 
+      className={`relative transition-all duration-300 ${
+        isSpeaking ? 'animate-pulse' : ''
+      }`}
+      style={{
+        width, 
+        height,
+        transform: `rotate(${headTilt}deg) translateY(${breathingOffset}px)`,
+        transition: 'transform 0.1s ease-out'
+      }}
+    >
       <svg
         width={width}
         height={height}
         viewBox="0 0 50 50"
         className="drop-shadow-lg"
+        style={{
+          opacity: emotionTransition,
+          transition: 'opacity 0.3s ease-in-out'
+        }}
       >
         {/* 背景 */}
         <circle cx="25" cy="25" r="24" fill="url(#bgGradient)" />
@@ -219,15 +338,27 @@ export const AnimeAvatar: React.FC<AnimeAvatarProps> = ({
           </>
         )}
 
-        {/* 眉毛（モンハン風の整った形） */}
+        {/* アニメーション対応眉毛 */}
         <path d={`M 17 ${eyeExpr.eyebrowY} Q 19 ${eyeExpr.eyebrowY - 1.5} 21 ${eyeExpr.eyebrowY - 0.5} Q 22 ${eyeExpr.eyebrowY} 23 ${eyeExpr.eyebrowY + 0.5}`} 
-              stroke="#8B4513" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              stroke="#8B4513" strokeWidth="1.8" fill="none" strokeLinecap="round"
+              style={{ 
+                transform: eyeExpr.tilt ? 'rotate(-2deg)' : 'none',
+                transformOrigin: '20px 12px',
+                transition: 'transform 0.2s ease-out'
+              }} />
         <path d={`M 27 ${eyeExpr.eyebrowY + 0.5} Q 28 ${eyeExpr.eyebrowY} 29 ${eyeExpr.eyebrowY - 0.5} Q 31 ${eyeExpr.eyebrowY - 1.5} 33 ${eyeExpr.eyebrowY}`} 
-              stroke="#8B4513" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              stroke="#8B4513" strokeWidth="1.8" fill="none" strokeLinecap="round"
+              style={{ 
+                transform: eyeExpr.tilt ? 'rotate(2deg)' : 'none',
+                transformOrigin: '30px 12px',
+                transition: 'transform 0.2s ease-out'
+              }} />
 
-        {/* 目（モンハン風の美しく整った目） */}
-        <ellipse cx="20" cy="24" rx="4.5" ry={eyeExpr.eyeHeight + 1.5} fill="white" stroke="#333" strokeWidth="1" />
-        <ellipse cx="30" cy="24" rx="4.5" ry={eyeExpr.eyeHeight + 1.5} fill="white" stroke="#333" strokeWidth="1" />
+        {/* アニメーション対応の目 */}
+        <ellipse cx="20" cy="24" rx="4.5" ry={eyeExpr.eyeHeight + 1.5} fill="white" stroke="#333" strokeWidth="1" 
+                 style={{ transition: 'ry 0.15s ease-out' }} />
+        <ellipse cx="30" cy="24" rx="4.5" ry={eyeExpr.eyeHeight + 1.5} fill="white" stroke="#333" strokeWidth="1" 
+                 style={{ transition: 'ry 0.15s ease-out' }} />
         
         {/* 瞳（より美しいグラデーション） */}
         <defs>
@@ -272,11 +403,25 @@ export const AnimeAvatar: React.FC<AnimeAvatarProps> = ({
         <path d="M 24.5 26.5 Q 25 27.5 25.5 26.5" stroke="#E8A598" strokeWidth="1" fill="none" strokeLinecap="round" />
         <circle cx="25" cy="27.2" r="0.3" fill="#F8BBD9" opacity="0.4" />
 
-        {/* 口（モンハン風の美しい唇） */}
-        <path d={mouthExpr.path} stroke={mouthExpr.color} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        {/* 唇のハイライト */}
-        {mood >= 50 && (
-          <path d="M 20 27.5 Q 25 26.5 30 27.5" stroke="#FFB6C1" strokeWidth="0.8" fill="none" opacity="0.6" />
+        {/* アニメーション対応の口 */}
+        <path d={mouthExpr.path} stroke={mouthExpr.color} strokeWidth="2.5" fill="none" strokeLinecap="round"
+              style={{ 
+                transition: 'all 0.2s ease-out',
+                transform: isSpeaking ? `scale(${1 + lipSyncFrame * 0.1})` : 'scale(1)',
+                transformOrigin: '25px 28px'
+              }} />
+        
+        {/* 唇のハイライト（アニメーション対応） */}
+        {(mood >= 50 || emotionState === 'happy' || emotionState === 'love') && (
+          <path d="M 20 27.5 Q 25 26.5 30 27.5" stroke="#FFB6C1" strokeWidth="0.8" fill="none" 
+                opacity={emotionState === 'love' ? 0.9 : 0.6}
+                style={{ transition: 'opacity 0.3s ease-out' }} />
+        )}
+
+        {/* リップシンク時の追加エフェクト */}
+        {isSpeaking && lipSyncFrame > 1 && (
+          <ellipse cx="25" cy="28" rx="8" ry="3" fill="none" stroke="#FF69B4" strokeWidth="0.5" 
+                   opacity="0.3" style={{ animation: 'pulse 0.3s ease-out' }} />
         )}
 
         {/* 頬の赤み */}
@@ -376,20 +521,68 @@ export const AnimeAvatar: React.FC<AnimeAvatarProps> = ({
           </>
         )}
         
-        {/* 気分による追加表現 */}
-        {mood >= 80 && (
+        {/* 感情状態による特殊エフェクト */}
+        {emotionState === 'love' && (
           <>
-            <circle cx="13" cy="26" r="0.5" fill="#FFD700" opacity="0.8" />
-            <circle cx="37" cy="26" r="0.5" fill="#FFD700" opacity="0.8" />
-            <circle cx="12" cy="28" r="0.3" fill="#FFD700" opacity="0.6" />
-            <circle cx="38" cy="28" r="0.3" fill="#FFD700" opacity="0.6" />
+            <circle cx="13" cy="20" r="1" fill="#FF1493" opacity="0.7">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="37" cy="20" r="1" fill="#FF1493" opacity="0.7">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+            <path d="M 12 18 Q 15 15 18 18" stroke="#FF69B4" strokeWidth="1" fill="none" opacity="0.8"/>
+            <path d="M 32 18 Q 35 15 38 18" stroke="#FF69B4" strokeWidth="1" fill="none" opacity="0.8"/>
+          </>
+        )}
+
+        {emotionState === 'surprised' && (
+          <>
+            <circle cx="15" cy="22" r="0.8" fill="#FFD700" opacity="0.9">
+              <animate attributeName="r" values="0.8;1.2;0.8" dur="0.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="35" cy="22" r="0.8" fill="#FFD700" opacity="0.9">
+              <animate attributeName="r" values="0.8;1.2;0.8" dur="0.5s" repeatCount="indefinite"/>
+            </circle>
+          </>
+        )}
+
+        {emotionState === 'angry' && (
+          <>
+            <path d="M 10 15 Q 12 12 14 15" stroke="#DC143C" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            <path d="M 36 15 Q 38 12 40 15" stroke="#DC143C" strokeWidth="2" fill="none" strokeLinecap="round"/>
+            <circle cx="11" cy="16" r="0.5" fill="#DC143C" opacity="0.8"/>
+            <circle cx="39" cy="16" r="0.5" fill="#DC143C" opacity="0.8"/>
           </>
         )}
         
-        {mood <= 20 && (
+        {/* 高気分時のキラキラエフェクト */}
+        {(mood >= 80 || emotionState === 'happy') && (
           <>
-            <path d="M 18 31 Q 20 32 22 31" stroke="#87CEEB" strokeWidth="0.8" fill="none" opacity="0.6" />
-            <circle cx="19" cy="31.5" r="0.3" fill="#87CEEB" opacity="0.4" />
+            <circle cx="13" cy="26" r="0.5" fill="#FFD700" opacity="0.8">
+              <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="37" cy="26" r="0.5" fill="#FFD700" opacity="0.8">
+              <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="12" cy="28" r="0.3" fill="#FFD700" opacity="0.6">
+              <animate attributeName="r" values="0.3;0.6;0.3" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="38" cy="28" r="0.3" fill="#FFD700" opacity="0.6">
+              <animate attributeName="r" values="0.6;0.3;0.6" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
+          </>
+        )}
+        
+        {/* 低気分時の涙エフェクト */}
+        {(mood <= 20 || emotionState === 'sad') && (
+          <>
+            <path d="M 18 31 Q 20 35 22 31" stroke="#87CEEB" strokeWidth="1.2" fill="none" opacity="0.7">
+              <animate attributeName="opacity" values="0.7;0.3;0.7" dur="3s" repeatCount="indefinite"/>
+            </path>
+            <circle cx="19" cy="33" r="0.5" fill="#87CEEB" opacity="0.6">
+              <animate attributeName="cy" values="33;38;33" dur="2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;0.1;0.6" dur="2s" repeatCount="indefinite"/>
+            </circle>
           </>
         )}
       </svg>

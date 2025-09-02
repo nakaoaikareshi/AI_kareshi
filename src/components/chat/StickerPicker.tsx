@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Smile, Heart, Star, Coffee, Cat, Sun, Moon, Gift } from 'lucide-react';
+import { Smile, Heart, Coffee, Cat, Sun, Gift } from 'lucide-react';
 
 interface StickerPickerProps {
   onStickerSelect: (sticker: string) => void;

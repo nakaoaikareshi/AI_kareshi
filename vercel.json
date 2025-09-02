@@ -12,7 +12,7 @@
       "maxDuration": 30
     }
   },
-  "regions": ["nrt1", "hnd1"],
+  "regions": ["nrt1"],
   "rewrites": [
     {
       "source": "/api/(.*)",
