@@ -112,7 +112,7 @@ export class SpeechSynthesisManager {
     return this.synth.getVoices();
   }
 
-  getCharacterVoice(gender: 'boyfriend' | 'girlfriend', personality?: { kindness: number; activeness: number }): SpeechSynthesisVoice | null {
+  getCharacterVoice(gender: 'boyfriend' | 'girlfriend', personality?: Record<string, number>): SpeechSynthesisVoice | null {
     const voices = this.getJapaneseVoices();
     
     if (gender === 'girlfriend') {
@@ -144,16 +144,18 @@ export class SpeechSynthesisManager {
     let pitch = 1.0;
     
     // 積極性による話速調整
-    if (character.personality.activeness >= 70) {
+    const activeness = character.personality.activeness || 50;
+    if (activeness >= 70) {
       rate = 1.1; // 少し早め
-    } else if (character.personality.activeness <= 30) {
+    } else if (activeness <= 30) {
       rate = 0.9; // 少し遅め
     }
     
     // 優しさによる音程調整
-    if (character.personality.kindness >= 70) {
+    const kindness = character.personality.kindness || 50;
+    if (kindness >= 70) {
       pitch = character.gender === 'girlfriend' ? 1.1 : 0.9; // 優しい調子
-    } else if (character.personality.kindness <= 30) {
+    } else if (kindness <= 30) {
       pitch = character.gender === 'girlfriend' ? 0.9 : 1.1; // クールな調子
     }
     
