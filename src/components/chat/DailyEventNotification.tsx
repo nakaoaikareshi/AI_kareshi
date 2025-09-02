@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, MessageCircle } from 'lucide-react';
 import { DailyEvent } from '@/types';
 import { DailyEventGenerator } from '@/utils/dailyEvents';
@@ -28,14 +28,14 @@ export const DailyEventNotification: React.FC<DailyEventNotificationProps> = ({
     return () => clearTimeout(timer);
   }, [checkForDailyEvent]);
 
-  const checkForDailyEvent = () => {
+  const checkForDailyEvent = useCallback(() => {
     const event = DailyEventGenerator.generateDailyEvent(character.occupation);
     
     if (event && DailyEventGenerator.shouldShareEvent()) {
       setPendingEvent(event);
       setShowNotification(true);
     }
-  };
+  }, [character.occupation]);
 
   const handleSendEvent = () => {
     if (pendingEvent) {
