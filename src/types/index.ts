@@ -22,11 +22,28 @@ export interface Character {
 
 // Avatar System Types
 export interface AvatarSettings {
+  // 顔パーツ
   hairStyle: string;
   hairColor: string;
   eyeColor: string;
+  eyeShape: string;
+  eyebrowStyle: string;
+  noseStyle: string;
+  mouthStyle: string;
+  skinTone: string;
+  faceShape: string;
+  // 体型
+  bodyType: string;
+  height: string;
+  // 服装
   outfit: string;
+  topWear: string;
+  bottomWear: string;
+  shoes: string;
+  // アクセサリー
   accessories: string[];
+  jewelry: string[];
+  makeup: string[];
 }
 
 // Voice Settings Types

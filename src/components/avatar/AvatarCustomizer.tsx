@@ -44,21 +44,86 @@ const AVATAR_OPTIONS = {
     { id: 'amber', name: 'アンバー', free: false, color: '#FFBF00' },
     { id: 'crimson', name: 'クリムゾン', free: false, color: '#DC143C' },
   ],
-  outfit: [
-    { id: 'casual', name: 'カジュアル', free: true, emoji: '👕' },
-    { id: 'formal', name: 'フォーマル', free: true, emoji: '👔' },
-    { id: 'sporty', name: 'スポーティ', free: false, emoji: '🏃‍♂️' },
-    { id: 'elegant', name: 'エレガント', free: false, emoji: '👗' },
-    { id: 'cute', name: 'キュート', free: false, emoji: '🎀' },
-    { id: 'cool', name: 'クール', free: false, emoji: '🕶️' },
-    { id: 'gothic', name: 'ゴシック', free: false, emoji: '🖤' },
-    { id: 'sailor', name: 'セーラー服', free: false, emoji: '⚓' },
+  eyeShape: [
+    { id: 'round', name: '丸目', free: true, emoji: '⭕' },
+    { id: 'almond', name: 'アーモンド', free: true, emoji: '🌰' },
+    { id: 'upturned', name: 'つり目', free: false, emoji: '😊' },
+    { id: 'droopy', name: 'たれ目', free: false, emoji: '😌' },
+    { id: 'narrow', name: '細目', free: false, emoji: '😑' },
+  ],
+  eyebrowStyle: [
+    { id: 'natural', name: 'ナチュラル', free: true, emoji: '😐' },
+    { id: 'thick', name: '太眉', free: false, emoji: '😠' },
+    { id: 'thin', name: '細眉', free: false, emoji: '😯' },
+    { id: 'arched', name: 'アーチ', free: false, emoji: '🤨' },
+  ],
+  noseStyle: [
+    { id: 'small', name: '小さめ', free: true, emoji: '👃' },
+    { id: 'button', name: 'ボタン鼻', free: false, emoji: '🔘' },
+    { id: 'straight', name: 'ストレート', free: false, emoji: '📏' },
+    { id: 'upturned', name: '上向き', free: false, emoji: '⬆️' },
+  ],
+  mouthStyle: [
+    { id: 'small', name: '小さめ', free: true, emoji: '😐' },
+    { id: 'full', name: 'ふっくら', free: false, emoji: '😗' },
+    { id: 'wide', name: '横に広い', free: false, emoji: '😄' },
+    { id: 'heart', name: 'ハート型', free: false, emoji: '💋' },
+  ],
+  faceShape: [
+    { id: 'oval', name: '卵型', free: true, emoji: '🥚' },
+    { id: 'round', name: '丸顔', free: false, emoji: '⭕' },
+    { id: 'square', name: '四角', free: false, emoji: '⬜' },
+    { id: 'heart', name: 'ハート', free: false, emoji: '💝' },
+  ],
+  bodyType: [
+    { id: 'slim', name: 'スリム', free: true, emoji: '🧍' },
+    { id: 'average', name: '標準', free: true, emoji: '🚶' },
+    { id: 'curvy', name: 'グラマー', free: false, emoji: '💃' },
+    { id: 'athletic', name: 'アスリート', free: false, emoji: '💪' },
+  ],
+  height: [
+    { id: 'short', name: '低め (150-155cm)', free: true, emoji: '🔽' },
+    { id: 'average', name: '標準 (156-165cm)', free: true, emoji: '➖' },
+    { id: 'tall', name: '高め (166-175cm)', free: false, emoji: '🔼' },
+    { id: 'very_tall', name: 'とても高い (176cm+)', free: false, emoji: '⬆️' },
+  ],
+  topWear: [
+    { id: 'tshirt', name: 'Tシャツ', free: true, emoji: '👕' },
+    { id: 'blouse', name: 'ブラウス', free: false, emoji: '👚' },
+    { id: 'sweater', name: 'セーター', free: false, emoji: '🧥' },
+    { id: 'tank', name: 'タンクトップ', free: false, emoji: '🎽' },
+  ],
+  bottomWear: [
+    { id: 'pants', name: 'パンツ', free: true, emoji: '👖' },
+    { id: 'skirt', name: 'スカート', free: false, emoji: '👗' },
+    { id: 'shorts', name: 'ショーツ', free: false, emoji: '🩳' },
+    { id: 'jeans', name: 'ジーンズ', free: false, emoji: '👖' },
+  ],
+  shoes: [
+    { id: 'sneakers', name: 'スニーカー', free: true, emoji: '👟' },
+    { id: 'boots', name: 'ブーツ', free: false, emoji: '👢' },
+    { id: 'heels', name: 'ヒール', free: false, emoji: '👠' },
+    { id: 'flats', name: 'フラット', free: false, emoji: '🥿' },
   ],
   accessories: [
     { id: 'none', name: 'なし', free: true, emoji: '🚫' },
     { id: 'ribbon', name: 'リボン', free: false, emoji: '🎀' },
     { id: 'glasses', name: 'メガネ', free: false, emoji: '👓' },
     { id: 'earrings', name: 'ピアス', free: false, emoji: '💎' },
+    { id: 'necklace', name: 'ネックレス', free: false, emoji: '📿' },
+    { id: 'bracelet', name: 'ブレスレット', free: false, emoji: '⌚' },
+  ],
+  jewelry: [
+    { id: 'none', name: 'なし', free: true, emoji: '🚫' },
+    { id: 'ring', name: '指輪', free: false, emoji: '💍' },
+    { id: 'watch', name: '腕時計', free: false, emoji: '⌚' },
+    { id: 'anklet', name: 'アンクレット', free: false, emoji: '🦶' },
+  ],
+  makeup: [
+    { id: 'none', name: 'なし', free: true, emoji: '🚫' },
+    { id: 'light', name: 'ナチュラル', free: false, emoji: '💄' },
+    { id: 'bold', name: 'しっかり', free: false, emoji: '💋' },
+    { id: 'cute', name: 'キュート', free: false, emoji: '🌸' },
   ],
 };
 
@@ -75,7 +140,7 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
   if (!isOpen) return null;
 
   const handleOptionSelect = (category: keyof AvatarSettings, optionId: string) => {
-    const option = AVATAR_OPTIONS[category].find(opt => opt.id === optionId);
+    const option = AVATAR_OPTIONS[category as keyof typeof AVATAR_OPTIONS]?.find(opt => opt.id === optionId);
     if (!option) return;
 
     if (!option.free) {
@@ -84,20 +149,20 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
     }
 
     let updatedAvatar;
-    if (category === 'accessories') {
+    if (category === 'accessories' || category === 'jewelry' || category === 'makeup') {
       if (optionId === 'none') {
         updatedAvatar = {
           ...tempAvatar,
-          accessories: [],
+          [category]: [],
         };
       } else {
-        const currentAccessories = tempAvatar.accessories || [];
-        const hasAccessory = currentAccessories.includes(optionId);
+        const currentItems = tempAvatar[category] || [];
+        const hasItem = currentItems.includes(optionId);
         updatedAvatar = {
           ...tempAvatar,
-          accessories: hasAccessory 
-            ? currentAccessories.filter(acc => acc !== optionId)
-            : [...currentAccessories, optionId],
+          [category]: hasItem 
+            ? currentItems.filter(item => item !== optionId)
+            : [...currentItems, optionId],
         };
       }
     } else {
@@ -147,18 +212,29 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
           {/* カスタマイズオプション */}
           <div className="w-1/2 flex flex-col">
             {/* カテゴリータブ */}
-            <div className="flex border-b bg-gray-50">
+            <div className="flex flex-wrap border-b bg-gray-50">
               {Object.entries({
                 hairStyle: '髪型',
                 hairColor: '髪色', 
                 eyeColor: '瞳色',
-                outfit: '服装',
+                eyeShape: '目の形',
+                eyebrowStyle: '眉毛',
+                noseStyle: '鼻',
+                mouthStyle: '口',
+                faceShape: '顔型',
+                bodyType: '体型',
+                height: '身長',
+                topWear: 'トップス',
+                bottomWear: 'ボトムス',
+                shoes: '靴',
                 accessories: 'アクセサリー',
+                jewelry: 'ジュエリー',
+                makeup: 'メイク',
               }).map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setSelectedCategory(key as keyof typeof AVATAR_OPTIONS)}
-                  className={`flex-1 py-3 text-sm font-medium ${
+                  className={`px-2 py-2 text-xs font-medium min-w-0 ${
                     selectedCategory === key
                       ? 'border-b-2 border-pink-500 text-pink-600 bg-white'
                       : 'text-gray-500 hover:text-gray-700'
@@ -177,8 +253,8 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
                     key={option.id}
                     onClick={() => handleOptionSelect(selectedCategory, option.id)}
                     className={`p-4 border rounded-lg text-left transition-all ${
-                      selectedCategory === 'accessories' 
-                        ? (tempAvatar.accessories?.includes(option.id) || (option.id === 'none' && (!tempAvatar.accessories || tempAvatar.accessories.length === 0)))
+                      (selectedCategory === 'accessories' || selectedCategory === 'jewelry' || selectedCategory === 'makeup')
+                        ? (tempAvatar[selectedCategory]?.includes(option.id) || (option.id === 'none' && (!tempAvatar[selectedCategory] || tempAvatar[selectedCategory].length === 0)))
                           ? 'border-pink-500 bg-pink-50'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         : tempAvatar[selectedCategory] === option.id
