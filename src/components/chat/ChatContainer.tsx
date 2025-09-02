@@ -30,7 +30,7 @@ export const ChatContainer: React.FC = () => {
   const [showMemories, setShowMemories] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
-  const [moodState, setMoodState] = useState(null);
+  const [moodState, setMoodState] = useState<{ currentMood: number } | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState<'happy' | 'sad' | 'surprised' | 'angry' | 'love' | 'normal'>('normal');
 
