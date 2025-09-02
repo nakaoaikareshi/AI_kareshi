@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Settings, ShoppingBag, Heart, Gift, Video } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { useCharacterStore } from '@/store/characterStore';
@@ -79,14 +79,7 @@ export const ChatContainer: React.FC = () => {
     }
   }, [messages]);
 
-  // Load conversation when component mounts
-  useEffect(() => {
-    if (character) {
-      fetchMoodState();
-    }
-  }, [character, fetchMoodState]);
-
-  const fetchMoodState = async () => {
+  const fetchMoodState = useCallback(async () => {
     if (!character) return;
     
     try {
@@ -105,7 +98,14 @@ export const ChatContainer: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch mood state:', error);
     }
-  };
+  }, [character]);
+
+  // Load conversation when component mounts
+  useEffect(() => {
+    if (character) {
+      fetchMoodState();
+    }
+  }, [character, fetchMoodState]);
 
   // Mark messages as read when user views them
   useEffect(() => {
