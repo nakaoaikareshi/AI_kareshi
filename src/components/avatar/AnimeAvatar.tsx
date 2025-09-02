@@ -342,14 +342,14 @@ export const AnimeAvatar: React.FC<AnimeAvatarProps> = ({
         <path d={`M 17 ${eyeExpr.eyebrowY} Q 19 ${eyeExpr.eyebrowY - 1.5} 21 ${eyeExpr.eyebrowY - 0.5} Q 22 ${eyeExpr.eyebrowY} 23 ${eyeExpr.eyebrowY + 0.5}`} 
               stroke="#8B4513" strokeWidth="1.8" fill="none" strokeLinecap="round"
               style={{ 
-                transform: eyeExpr.tilt ? 'rotate(-2deg)' : 'none',
+                transform: ('tilt' in eyeExpr && eyeExpr.tilt) ? 'rotate(-2deg)' : 'none',
                 transformOrigin: '20px 12px',
                 transition: 'transform 0.2s ease-out'
               }} />
         <path d={`M 27 ${eyeExpr.eyebrowY + 0.5} Q 28 ${eyeExpr.eyebrowY} 29 ${eyeExpr.eyebrowY - 0.5} Q 31 ${eyeExpr.eyebrowY - 1.5} 33 ${eyeExpr.eyebrowY}`} 
               stroke="#8B4513" strokeWidth="1.8" fill="none" strokeLinecap="round"
               style={{ 
-                transform: eyeExpr.tilt ? 'rotate(2deg)' : 'none',
+                transform: ('tilt' in eyeExpr && eyeExpr.tilt) ? 'rotate(2deg)' : 'none',
                 transformOrigin: '30px 12px',
                 transition: 'transform 0.2s ease-out'
               }} />
