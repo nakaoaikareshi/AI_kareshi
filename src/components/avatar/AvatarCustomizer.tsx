@@ -190,7 +190,7 @@ export const AvatarCustomizer: React.FC<AvatarCustomizerProps> = ({
                       <span className="text-2xl">
                         {selectedCategory === 'hairColor' || selectedCategory === 'eyeColor' 
                           ? '●' 
-                          : option.emoji || '👤'}
+                          : ('emoji' in option ? option.emoji : '👤')}
                       </span>
                       {!option.free && (
                         <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
