@@ -101,12 +101,14 @@ export class SpeechSynthesisManager {
   }
 
   getJapaneseVoices(): SpeechSynthesisVoice[] {
+    if (!this.synth) return [];
     return this.synth.getVoices().filter(voice => 
       voice.lang.startsWith('ja') || voice.lang.startsWith('jp')
     );
   }
 
   getAllVoices(): SpeechSynthesisVoice[] {
+    if (!this.synth) return [];
     return this.synth.getVoices();
   }
 
