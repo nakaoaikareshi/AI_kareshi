@@ -52,18 +52,23 @@ class Logger {
   private sanitizeError(error: unknown): LogEntry['error'] {
     if (!error) return undefined;
 
+    // Type guard for Error objects
+    const isErrorObject = (err: unknown): err is Error => {
+      return err instanceof Error || (typeof err === 'object' && err !== null && 'message' in err);
+    };
+
     const sanitized: LogEntry['error'] = {
-      name: error.name || 'Error',
-      message: error.message || 'Unknown error',
+      name: isErrorObject(error) && 'name' in error ? error.name : 'Error',
+      message: isErrorObject(error) ? error.message : String(error),
     };
 
     // Include stack trace only in development
-    if (this.isDevelopment && error.stack) {
+    if (this.isDevelopment && isErrorObject(error) && 'stack' in error && error.stack) {
       sanitized.stack = error.stack;
     }
 
     // Include error code if available
-    if (error.code) {
+    if (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string') {
       sanitized.code = error.code;
     }
 
