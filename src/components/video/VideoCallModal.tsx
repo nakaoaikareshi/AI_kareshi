@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
-import { AnimatedAvatar } from '@/components/avatar/AnimatedAvatar';
+import { RealisticAvatar } from '@/components/avatar/RealisticAvatar';
 import { useCharacterStore } from '@/store/characterStore';
 import { speechSynthesis } from '@/utils/speechSynthesis';
 
@@ -82,7 +82,7 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
         {/* メインビデオエリア */}
         <div className="bg-gradient-to-b from-purple-900 via-pink-900 to-purple-900 h-96 flex items-center justify-center relative">
           {isVideoOn ? (
-            <AnimatedAvatar 
+            <RealisticAvatar 
               avatar={character.avatar || {
                 hairStyle: 'medium',
                 hairColor: 'brown',
