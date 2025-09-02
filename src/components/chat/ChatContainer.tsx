@@ -15,6 +15,7 @@ import { MemoryAlbum } from '@/components/memories/MemoryAlbum';
 import { ScheduleModal } from '@/components/schedule/ScheduleModal';
 import { MoodIndicator } from './MoodIndicator';
 import { MoodSystem } from '@/utils/moodSystem';
+import { DailyEventNotification } from './DailyEventNotification';
 
 export const ChatContainer: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,8 +42,30 @@ export const ChatContainer: React.FC = () => {
   useEffect(() => {
     if (character && user) {
       loadConversation(user.id, character.id);
+      fetchMoodState();
     }
   }, [character, user, loadConversation]);
+
+  const fetchMoodState = async () => {
+    if (!character) return;
+    
+    try {
+      const response = await fetch('/api/mood', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ character }),
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setMoodState(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch mood state:', error);
+    }
+  };
 
   // Mark messages as read when user views them
   useEffect(() => {
@@ -135,6 +158,17 @@ export const ChatContainer: React.FC = () => {
     }, 1000);
   };
 
+  const handleEventMessage = (eventMessage: string) => {
+    // キャラクターからの日常イベントメッセージを追加
+    addMessage({
+      senderId: character!.id,
+      content: eventMessage,
+      type: 'text',
+      isRead: false,
+      isUser: false,
+    });
+  };
+
   if (!character) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -215,6 +249,11 @@ export const ChatContainer: React.FC = () => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 bg-gradient-to-b from-gray-50 to-gray-100">
+        {/* 気分状態表示 */}
+        {moodState && (
+          <MoodIndicator moodState={moodState} characterName={character.nickname} />
+        )}
+        
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
             <p>{character.nickname}との会話を始めましょう！</p>
@@ -258,6 +297,16 @@ export const ChatContainer: React.FC = () => {
         isOpen={showSchedule}
         onClose={() => setShowSchedule(false)}
         characterName={character.nickname}
+      />
+
+      {/* 日常イベント通知 */}
+      <DailyEventNotification 
+        character={{
+          id: character.id,
+          nickname: character.nickname,
+          occupation: character.occupation,
+        }}
+        onEventMessage={handleEventMessage}
       />
     </div>
   );
