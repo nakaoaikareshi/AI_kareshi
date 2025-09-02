@@ -1,0 +1,22 @@
+{
+  "env": {
+    "OPENAI_API_KEY": "@openai_api_key"
+  },
+  "build": {
+    "env": {
+      "OPENAI_API_KEY": "@openai_api_key"
+    }
+  },
+  "functions": {
+    "src/app/api/chat/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["nrt1", "hnd1"],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}
