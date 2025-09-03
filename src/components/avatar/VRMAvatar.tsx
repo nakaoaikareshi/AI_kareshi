@@ -174,12 +174,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       if (leftUpperArm) {
         leftUpperArm.rotation.x = 0;  // まっすぐ
         leftUpperArm.rotation.y = 0;  // まっすぐ
-        leftUpperArm.rotation.z = Math.PI * 0.4; // 体に沿って下ろす（72度）
+        leftUpperArm.rotation.z = 0; // まっすぐ下に下ろす
       }
       if (rightUpperArm) {
         rightUpperArm.rotation.x = 0;  // まっすぐ
         rightUpperArm.rotation.y = 0;  // まっすぐ
-        rightUpperArm.rotation.z = -Math.PI * 0.4; // 体に沿って下ろす（72度）
+        rightUpperArm.rotation.z = 0; // まっすぐ下に下ろす
       }
       if (leftLowerArm) {
         leftLowerArm.rotation.x = 0;  // まっすぐ
@@ -462,12 +462,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             if (leftUpperArm) {
               leftUpperArm.rotation.x = 0;  // まっすぐ
               leftUpperArm.rotation.y = 0;  // まっすぐ
-              leftUpperArm.rotation.z = Math.PI * 0.4; // 体に沿って下ろす（72度）
+              leftUpperArm.rotation.z = 0; // まっすぐ下に下ろす
             }
             if (rightUpperArm) {
               rightUpperArm.rotation.x = 0;  // まっすぐ
               rightUpperArm.rotation.y = 0;  // まっすぐ
-              rightUpperArm.rotation.z = -Math.PI * 0.4; // 体に沿って下ろす（72度）
+              rightUpperArm.rotation.z = 0; // まっすぐ下に下ろす
             }
             
             // 肘はまっすぐ
