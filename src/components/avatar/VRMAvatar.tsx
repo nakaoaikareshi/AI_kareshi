@@ -239,12 +239,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          35,  // 視野角を狭めて全身を大きく表示
+          28,  // 視野角をさらに狭めてモデルを大きく表示
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 1.5, 2.8);  // カメラを高い位置に配置
+        camera.position.set(0, 0.8, 3.0);  // カメラを胸の高さに配置
         cameraRef.current = camera;
 
         // レンダラー
@@ -263,7 +263,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 1.5, 0);  // カメラターゲットも高く設定
+        controls.target.set(0, 0.8, 0);  // カメラターゲットを胸の高さに設定
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
@@ -292,8 +292,8 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
-          // モデルの位置を調整（頭が画面上部に来るように）
-          vrm.scene.position.set(0, 1.0, 0);  // モデルを大きく上に配置
+          // モデルの位置を調整（頭がコンテナの最上部に来るように）
+          vrm.scene.position.set(0, -0.15, 0);  // モデルを適切な位置に配置
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -349,18 +349,24 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             }
           }
 
-          // カメラのターゲットを全身が見えるように設定（頭が画面上部に）
+          // カメラのターゲットを全身が見えるように設定（頭がコンテナ上端に）
           const head = vrm.humanoid?.getNormalizedBoneNode('head');
-          if (head) {
-            // 頭の位置を取得
+          const hips = vrm.humanoid?.getNormalizedBoneNode('hips');
+          if (head && hips) {
+            // 頭と腰の位置を取得
             const headWorldPosition = new THREE.Vector3();
+            const hipsWorldPosition = new THREE.Vector3();
             head.getWorldPosition(headWorldPosition);
+            hips.getWorldPosition(hipsWorldPosition);
             
-            // カメラのターゲットを胸のあたりに設定（頭が画面上部に来るように）
-            controls.target.set(0, headWorldPosition.y - 0.3, 0);
+            // 体の中心を計算
+            const centerY = (headWorldPosition.y + hipsWorldPosition.y) / 2;
             
-            // カメラを頭の高さに配置
-            camera.position.set(0, headWorldPosition.y - 0.3, 2.8);
+            // カメラのターゲットを体の中心に設定
+            controls.target.set(0, centerY, 0);
+            
+            // カメラを配置（頭がコンテナ上端に来るように）
+            camera.position.set(0, centerY, 3.0);
             controls.update();
           }
 
