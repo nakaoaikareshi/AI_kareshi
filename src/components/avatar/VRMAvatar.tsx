@@ -272,8 +272,8 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         // ライティング設定
         let ambientColor = 0xffffff;
         let directionalColor = 0xffffff;
-        let ambientIntensity = 0.6;
-        let directionalIntensity = 0.4;
+        const ambientIntensity = 0.6;
+        const directionalIntensity = 0.4;
         
         if (background.type === 'room' && background.roomConfig) {
           // 照明タイプに応じた色温度の設定
