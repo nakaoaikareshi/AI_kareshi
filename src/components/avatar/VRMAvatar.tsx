@@ -245,12 +245,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          55,  // 視野角を適度に設定
+          75,  // 視野角を広げて全身を収める
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 3.5, 2.5);  // カメラを高い位置に調整
+        camera.position.set(0, 1.0, 1.5);  // カメラを近づけて全体を映す
         cameraRef.current = camera;
 
         // レンダラー
@@ -269,13 +269,13 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 3.5, 0);  // 高い位置のモデル中心を見る
+        controls.target.set(0, 0.5, 0);  // 体の中心を見る
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
         controls.enableZoom = true;
-        controls.minDistance = 2.0;
-        controls.maxDistance = 5.0;
+        controls.minDistance = 1.2;
+        controls.maxDistance = 3.0;
 
         // VRMローダー
         const loader = new GLTFLoader();
@@ -291,15 +291,15 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           // VRMの回転を修正
           VRMUtils.rotateVRM0(vrm);
           
-          // モデルのスケール調整（適切なサイズを維持）
-          vrm.scene.scale.set(1.0, 1.0, 1.0);  // 元のサイズに戻す
+          // モデルのスケール調整（少し小さくして全身を収める）
+          vrm.scene.scale.set(0.85, 0.85, 0.85);  // 少し縮小
           
           // シーンに追加
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
           // モデルの位置を調整（中央に配置、全身表示）
-          vrm.scene.position.set(0, 3.5, 0);  // モデルを大幅に上に移動して画面中央に配置
+          vrm.scene.position.set(0, -1.0, 0);  // モデルを下げて足まで表示
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -358,22 +358,18 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             }
           }
 
-          // カメラのターゲットを全身の中心に向ける
+          // カメラのターゲットを全身が見えるように設定
           const hips = vrm.humanoid?.getNormalizedBoneNode('hips');
-          const head = vrm.humanoid?.getNormalizedBoneNode('head');
-          if (hips && head) {
-            // 腰と頭の位置を取得
+          if (hips) {
+            // 腰の位置を取得
             const hipsWorldPosition = new THREE.Vector3();
-            const headWorldPosition = new THREE.Vector3();
             hips.getWorldPosition(hipsWorldPosition);
-            head.getWorldPosition(headWorldPosition);
             
-            // 全身の中心（腰と頭の中間）をターゲットに
-            const centerY = (hipsWorldPosition.y + headWorldPosition.y) / 2;
-            controls.target.set(0, centerY, 0);
+            // 腰より少し下を見ることで全身を表示
+            controls.target.set(0, hipsWorldPosition.y - 0.3, 0);
             
-            // カメラ位置を調整して全身が画面中央に収まるように
-            camera.position.set(0, centerY, 2.5);
+            // カメラ位置を調整
+            camera.position.set(0, hipsWorldPosition.y + 0.2, 1.5);
             controls.update();
           }
 
