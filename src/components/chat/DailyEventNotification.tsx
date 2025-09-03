@@ -32,7 +32,7 @@ export const DailyEventNotification: React.FC<DailyEventNotificationProps> = ({
     if (!eventEnabled) return;
     
     // イベントをトリガーするか判定
-    if (shouldTriggerEvent(lastEventTime)) {
+    if (shouldTriggerEvent(lastEventTime || undefined)) {
       const recentEvents = getRecentEvents();
       const event = generateDailyEvent(character.occupation, recentEvents);
       
