@@ -16,6 +16,7 @@ import { ScheduleModal } from '@/components/schedule/ScheduleModal';
 import { MoodIndicator } from './MoodIndicator';
 import { DailyEventNotification } from './DailyEventNotification';
 import { AnimeAvatar } from '@/components/avatar/AnimeAvatar';
+import { VRMAvatar } from '@/components/avatar/VRMAvatar';
 import { VideoCallModal } from '@/components/video/VideoCallModal';
 import { speechSynthesis } from '@/utils/speechSynthesis';
 
@@ -226,24 +227,78 @@ export const ChatContainer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 chat-container">
-      {/* Header */}
-      <div className="bg-white border-b px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-          {character.avatar ? (
+    <div className="flex flex-col lg:flex-row h-screen bg-gray-100 chat-container">
+      {/* Character Display - Left side on PC */}
+      <div className="hidden lg:flex lg:w-1/3 xl:w-2/5 bg-gradient-to-br from-purple-50 to-pink-50 items-center justify-center p-8">
+        <div className="text-center">
+          {/* Character Avatar */}
+          {character.avatar?.vrmUrl ? (
+            <VRMAvatar 
+              avatar={character.avatar} 
+              size="large" 
+              mood={moodState?.currentMood || 50}
+              isSpeaking={isSpeaking}
+              isBlinking={true}
+              emotionState={currentEmotion}
+            />
+          ) : character.avatar ? (
             <AnimeAvatar 
               avatar={character.avatar} 
-              size="small" 
+              size="large" 
               mood={moodState?.currentMood || 50}
               isSpeaking={isSpeaking}
               isBlinking={true}
               emotionState={currentEmotion}
             />
           ) : (
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+            <div className="w-64 h-64 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-6xl mx-auto">
               💕
             </div>
           )}
+          
+          {/* Character Info */}
+          <div className="mt-6">
+            <h2 className="text-2xl font-bold text-gray-800">{character.nickname}</h2>
+            <p className="text-gray-600 mt-2">{character.occupation || '秘密'}</p>
+            
+            {/* Mood Display */}
+            {moodState && (
+              <div className="mt-4 inline-flex items-center px-4 py-2 bg-white rounded-full shadow-sm">
+                <span className="text-sm text-gray-600">気分:</span>
+                <span className="ml-2 text-sm font-medium">
+                  {moodState.currentMood >= 80 ? '😊 とても良い' :
+                   moodState.currentMood >= 60 ? '🙂 良い' :
+                   moodState.currentMood >= 40 ? '😐 普通' :
+                   moodState.currentMood >= 20 ? '😔 少し落ち込み' : '😢 落ち込んでいる'}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Container - Right side on PC, Full on mobile */}
+      <div className="flex flex-col flex-1 h-full">
+        {/* Header */}
+        <div className="bg-white border-b px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+          {/* Mobile only avatar */}
+          <div className="lg:hidden">
+            {character.avatar ? (
+              <AnimeAvatar 
+                avatar={character.avatar} 
+                size="small" 
+                mood={moodState?.currentMood || 50}
+                isSpeaking={isSpeaking}
+                isBlinking={true}
+                emotionState={currentEmotion}
+              />
+            ) : (
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                💕
+              </div>
+            )}
+          </div>
           <div className="min-w-0 flex-1">
             <h1 className="font-bold text-gray-900 text-base sm:text-lg truncate">{character.nickname}</h1>
             <div className="flex items-center space-x-1">
@@ -306,12 +361,14 @@ export const ChatContainer: React.FC = () => {
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 bg-gradient-to-b from-gray-50 to-gray-100">
-        {/* 気分状態表示 */}
-        {moodState && (
-          <MoodIndicator moodState={moodState} characterName={character.nickname} />
-        )}
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 bg-gradient-to-b from-gray-50 to-gray-100">
+          {/* 気分状態表示 - Mobile only */}
+          {moodState && (
+            <div className="lg:hidden">
+              <MoodIndicator moodState={moodState} characterName={character.nickname} />
+            </div>
+          )}
         
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
@@ -327,11 +384,12 @@ export const ChatContainer: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <ChatInput 
-        onSendMessage={handleSendMessage} 
-        disabled={isLoading} 
-      />
+        {/* Input */}
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          disabled={isLoading} 
+        />
+      </div>
 
       {/* Modals */}
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
@@ -372,6 +430,7 @@ export const ChatContainer: React.FC = () => {
         }}
         onEventMessage={handleEventMessage}
       />
+      </div>
     </div>
   );
 };

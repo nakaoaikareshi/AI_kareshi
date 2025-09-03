@@ -183,12 +183,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          35,
+          30,
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 1.4, 3.5);
+        camera.position.set(0, 1.0, 4.5);
         cameraRef.current = camera;
 
         // レンダラー
@@ -207,13 +207,13 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 1.0, 0);
+        controls.target.set(0, 0.75, 0);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
         controls.enableZoom = true;
-        controls.minDistance = 2.5;
-        controls.maxDistance = 5.0;
+        controls.minDistance = 3.0;
+        controls.maxDistance = 6.0;
 
         // VRMローダー
         const loader = new GLTFLoader();
@@ -236,17 +236,22 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
-          // モデルの位置を調整（少し下げる）
-          vrm.scene.position.y = -0.2;
+          // モデルの位置を調整（中央に配置、足まで表示）
+          vrm.scene.position.set(-0.1, -0.45, 0);
 
-          // カメラを顔に向ける
+          // カメラのターゲットを体の中心に向ける
+          const hips = vrm.humanoid?.getNormalizedBoneNode('hips');
           const head = vrm.humanoid?.getNormalizedBoneNode('head');
-          if (head) {
-            // カメラのターゲットを頭部の位置に設定
+          if (hips && head) {
+            // 腰と頭の中間点をターゲットに設定
+            const hipsWorldPosition = new THREE.Vector3();
             const headWorldPosition = new THREE.Vector3();
+            hips.getWorldPosition(hipsWorldPosition);
             head.getWorldPosition(headWorldPosition);
-            controls.target.copy(headWorldPosition);
-            controls.target.y = headWorldPosition.y - 0.2; // 少し下を見る
+            
+            // 体の中心を計算
+            const centerY = (hipsWorldPosition.y + headWorldPosition.y) / 2;
+            controls.target.set(-0.1, centerY, 0);
             controls.update();
           }
 
