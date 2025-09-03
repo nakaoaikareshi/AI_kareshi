@@ -169,16 +169,16 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
       const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
       
-      // 腕を体の横に自然に下ろす
+      // 腕を体に沿って真下に下ろす
       if (leftUpperArm) {
         leftUpperArm.rotation.x = 0;  // まっすぐ
         leftUpperArm.rotation.y = 0;  // まっすぐ
-        leftUpperArm.rotation.z = Math.PI * 0.05; // わずかに外側に開く（5度）
+        leftUpperArm.rotation.z = Math.PI * 0.4; // 体に沿って下ろす（72度）
       }
       if (rightUpperArm) {
         rightUpperArm.rotation.x = 0;  // まっすぐ
         rightUpperArm.rotation.y = 0;  // まっすぐ
-        rightUpperArm.rotation.z = -Math.PI * 0.05; // わずかに外側に開く（5度）
+        rightUpperArm.rotation.z = -Math.PI * 0.4; // 体に沿って下ろす（72度）
       }
       if (leftLowerArm) {
         leftLowerArm.rotation.x = 0;  // まっすぐ
@@ -457,16 +457,16 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             const leftLowerArm = vrm.humanoid.getNormalizedBoneNode('leftLowerArm');
             const rightLowerArm = vrm.humanoid.getNormalizedBoneNode('rightLowerArm');
             
-            // 腕を自然に体の横に下ろす（初期ポーズ）
+            // 腕を体に沿って真下に下ろす（初期ポーズ）
             if (leftUpperArm) {
               leftUpperArm.rotation.x = 0;  // まっすぐ
               leftUpperArm.rotation.y = 0;  // まっすぐ
-              leftUpperArm.rotation.z = Math.PI * 0.05; // わずかに外側に開く
+              leftUpperArm.rotation.z = Math.PI * 0.4; // 体に沿って下ろす（72度）
             }
             if (rightUpperArm) {
               rightUpperArm.rotation.x = 0;  // まっすぐ
               rightUpperArm.rotation.y = 0;  // まっすぐ
-              rightUpperArm.rotation.z = -Math.PI * 0.05; // わずかに外側に開く
+              rightUpperArm.rotation.z = -Math.PI * 0.4; // 体に沿って下ろす（72度）
             }
             
             // 肘はまっすぐ
