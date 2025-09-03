@@ -269,7 +269,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.3, 0);  // もっと下の方（腰あたり）を中心に
+        controls.target.set(0, 0.6, 0);  // 体の中央付近を中心に
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
@@ -299,7 +299,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           vrmRef.current = vrm;
 
           // モデルの位置を調整（中央に配置、全身表示）
-          vrm.scene.position.set(0, -0.9, 0);  // もっと下げて確実に足まで表示
+          vrm.scene.position.set(0, -0.5, 0);  // 適度な高さで全身をバランスよく表示
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -365,11 +365,11 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             const hipsWorldPosition = new THREE.Vector3();
             hips.getWorldPosition(hipsWorldPosition);
             
-            // 腰より少し上を見る（全身のバランスが良い位置）
-            controls.target.set(0, hipsWorldPosition.y - 0.2, 0);
+            // 腰の位置を基準に全身のバランスが良い位置を見る
+            controls.target.set(0, hipsWorldPosition.y + 0.1, 0);
             
             // カメラ位置も調整して全身が入るように
-            camera.position.set(0, hipsWorldPosition.y + 0.2, 2.2);
+            camera.position.set(0, hipsWorldPosition.y + 0.5, 2.3);
             controls.update();
           }
 
