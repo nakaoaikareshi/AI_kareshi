@@ -253,7 +253,19 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             textureLoader.load(
               bgUrl,
               (texture) => {
-                scene.background = texture;
+                // 背景を平面として追加（適切なスケール）
+                const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
+                const backgroundMaterial = new THREE.MeshBasicMaterial({ 
+                  map: texture,
+                  side: THREE.DoubleSide
+                });
+                const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+                backgroundMesh.position.z = -3; // キャラクターの後ろに配置
+                backgroundMesh.position.y = 1.5; // 高さを調整
+                scene.add(backgroundMesh);
+                
+                // シーンの背景色も設定
+                scene.background = new THREE.Color('#F5F5F5');
                 console.log('Applied preset background image:', bgUrl);
               },
               undefined,
@@ -288,7 +300,19 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           textureLoader.load(
             'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=1920&h=1080&fit=crop',
             (texture) => {
-              scene.background = texture;
+              // 背景を平面として追加（適切なスケール）
+              const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
+              const backgroundMaterial = new THREE.MeshBasicMaterial({ 
+                map: texture,
+                side: THREE.DoubleSide
+              });
+              const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+              backgroundMesh.position.z = -3; // キャラクターの後ろに配置
+              backgroundMesh.position.y = 1.5; // 高さを調整
+              scene.add(backgroundMesh);
+              
+              // シーンの背景色も設定
+              scene.background = new THREE.Color('#F5F5F5');
               console.log('Applied default background image');
             },
             undefined,
