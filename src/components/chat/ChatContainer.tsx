@@ -230,7 +230,7 @@ export const ChatContainer: React.FC = () => {
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-100 chat-container">
       {/* Character Display - Left side on PC */}
-      <div className="hidden lg:flex lg:w-1/3 xl:w-2/5 bg-gradient-to-br from-purple-50 to-pink-50 items-center justify-center p-8">
+      <div className="hidden lg:flex lg:w-1/3 xl:w-2/5 items-center justify-center p-8" style={{ backgroundColor: '#FFF5F5' }}>
         <div className="text-center">
           {/* Character Avatar - VRMを優先表示 */}
           <VRMAvatar 

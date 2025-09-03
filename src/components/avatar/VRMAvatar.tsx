@@ -230,7 +230,9 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         const scene = new THREE.Scene();
         
         // 背景設定の適用
-        if (background.type === 'preset') {
+        console.log('Background settings:', background); // デバッグ用
+        
+        if (background && background.type === 'preset') {
           // プリセット背景の色を適用
           const presetColors: Record<string, string> = {
             bedroom: '#FFF5F5',
@@ -242,9 +244,10 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             school: '#FFFAF0',
             library: '#FAF5FF',
           };
-          const bgColor = presetColors[background.presetId || 'bedroom'] || '#F0F0F0';
+          const bgColor = presetColors[background.presetId || 'bedroom'] || '#FFF5F5';
           scene.background = new THREE.Color(bgColor);
-        } else if (background.type === 'room' && background.roomConfig) {
+          console.log('Applied preset background color:', bgColor);
+        } else if (background && background.type === 'room' && background.roomConfig) {
           // ルームカスタマイズの場合
           scene.background = new THREE.Color(background.roomConfig.wallColor);
           
@@ -264,7 +267,9 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           floor.position.y = -1.5;
           scene.add(floor);
         } else {
-          scene.background = new THREE.Color(0xf0f0f0);
+          // デフォルト背景（ピンク系の寝室風）
+          scene.background = new THREE.Color('#FFF5F5');
+          console.log('Applied default background color: #FFF5F5');
         }
         
         sceneRef.current = scene;
@@ -315,7 +320,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         // レンダラー
         const renderer = new THREE.WebGLRenderer({ 
           antialias: true,
-          alpha: true 
+          alpha: false // 背景を表示するためalphaを無効に
         });
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
