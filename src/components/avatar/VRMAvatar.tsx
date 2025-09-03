@@ -275,16 +275,16 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         }
       }
 
-      // 手の細かな動き
-      const leftHand = vrmRef.current.humanoid.getNormalizedBoneNode('leftHand');
-      const rightHand = vrmRef.current.humanoid.getNormalizedBoneNode('rightHand');
-      if (leftHand) {
-        leftHand.rotation.x = Math.PI * 0.03 + Math.sin(time * 1.5) * 0.01;
-        leftHand.rotation.z = -Math.PI * 0.02 + Math.sin(time * 2) * 0.005;
-      }
-      if (rightHand) {
-        rightHand.rotation.x = Math.PI * 0.03 + Math.sin(time * 1.5 + Math.PI) * 0.01;
-        rightHand.rotation.z = Math.PI * 0.02 + Math.sin(time * 2 + Math.PI) * 0.005;
+      // 手の細かな追加動き（ジェスチャー以外の時）
+      if (gesturePattern === -1) { // この条件は常にfalseなので実行されない（ジェスチャーアニメーションを優先）
+        if (leftHand) {
+          leftHand.rotation.x = Math.PI * 0.03 + Math.sin(time * 1.5) * 0.01;
+          leftHand.rotation.z = -Math.PI * 0.02 + Math.sin(time * 2) * 0.005;
+        }
+        if (rightHand) {
+          rightHand.rotation.x = Math.PI * 0.03 + Math.sin(time * 1.5 + Math.PI) * 0.01;
+          rightHand.rotation.z = Math.PI * 0.02 + Math.sin(time * 2 + Math.PI) * 0.005;
+        }
       }
 
       // 重心の移動（腰の動き）
