@@ -1,6 +1,6 @@
 import React from 'react';
 import { AvatarSettings } from '@/types';
-import { FantasyAvatar } from './FantasyAvatar';
+import { Live2DAvatarWrapper } from './Live2DAvatarWrapper';
 
 const AVATAR_OPTIONS = {
   hairStyle: [
@@ -108,10 +108,12 @@ export const AvatarPreview: React.FC<AvatarPreviewProps> = ({
     <div className="flex flex-col items-center">
       {/* アニメ風アバター表示 */}
       <div className="relative">
-        <FantasyAvatar 
+        <Live2DAvatarWrapper 
           avatar={avatar} 
           size={size}
           mood={50} // デフォルト気分
+          isBlinking={true}
+          emotionState="normal"
         />
       </div>
 
