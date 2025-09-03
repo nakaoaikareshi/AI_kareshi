@@ -36,9 +36,9 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
   // サイズ設定
   const dimensions = {
-    small: { width: 150, height: 150 },
-    medium: { width: 300, height: 300 },
-    large: { width: 500, height: 500 },
+    small: { width: 150, height: 200 },
+    medium: { width: 300, height: 400 },
+    large: { width: 500, height: 650 },
   };
 
   const { width, height } = dimensions[size];
@@ -245,12 +245,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          30,
+          45,  // 視野角を広げて全身が入るように
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 1.0, 4.5);
+        camera.position.set(0, 1.0, 3.0);  // カメラを少し近づける
         cameraRef.current = camera;
 
         // レンダラー
@@ -269,13 +269,13 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.75, 0);
+        controls.target.set(0, 0.8, 0);  // 体の中心を見る
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
         controls.enableZoom = true;
-        controls.minDistance = 3.0;
-        controls.maxDistance = 6.0;
+        controls.minDistance = 2.0;
+        controls.maxDistance = 4.0;
 
         // VRMローダー
         const loader = new GLTFLoader();
@@ -298,8 +298,8 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
-          // モデルの位置を調整（中央に配置、足まで表示）
-          vrm.scene.position.set(-0.1, -0.45, 0);
+          // モデルの位置を調整（中央に配置、全身表示）
+          vrm.scene.position.set(0, -0.7, 0);  // さらに下げて足まで表示
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -370,7 +370,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             
             // 体の中心を計算
             const centerY = (hipsWorldPosition.y + headWorldPosition.y) / 2;
-            controls.target.set(-0.1, centerY, 0);
+            controls.target.set(0, centerY - 0.1, 0);  // 少し下を中心に
             controls.update();
           }
 
