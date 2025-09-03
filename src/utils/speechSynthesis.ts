@@ -1,3 +1,5 @@
+import { CharacterPersonality } from '@/types';
+
 export class SpeechSynthesisManager {
   private static instance: SpeechSynthesisManager;
   private synth: SpeechSynthesis | null = null;
@@ -132,7 +134,7 @@ export class SpeechSynthesisManager {
     }
   }
 
-  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: any }, options: {
+  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: CharacterPersonality }, options: {
     onStart?: () => void;
     onEnd?: () => void;
     onError?: (error: SpeechSynthesisErrorEvent) => void;
