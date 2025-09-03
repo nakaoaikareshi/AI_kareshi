@@ -170,75 +170,108 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         head.rotation.y = Math.sin(time * 0.9 + Math.PI * 0.6) * 0.015;
       }
 
-      // 身振り手振りアニメーション（腕の表現豊かな動き）
-      const gestureTime = time * 0.3; // ゆっくりとした身振り
-      const gestureIntensity = Math.sin(gestureTime) * 0.5 + 0.5; // 0から1の強度
+      // 身振り手振りアニメーション（大きくはっきりとした動き）
+      const gestureTime = time * 0.8; // 動きを速く
       
       const leftUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
       const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
       const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
       const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
+      const leftHand = vrmRef.current.humanoid.getNormalizedBoneNode('leftHand');
+      const rightHand = vrmRef.current.humanoid.getNormalizedBoneNode('rightHand');
       
-      // 身振り手振りのパターン
-      const gesturePattern = Math.floor(time / 8) % 3; // 8秒ごとに切り替わる3つのパターン
+      // 身振り手振りのパターン（5秒ごとに切り替え）
+      const gesturePattern = Math.floor(time / 5) % 4;
       
       if (gesturePattern === 0) {
-        // パターン1: 説明するような動き（両手を広げる）
-        if (leftUpperArm) {
-          leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(gestureTime * 2) * 0.3 * gestureIntensity;
-          leftUpperArm.rotation.x = leftUpperArmXBase + Math.sin(gestureTime * 2.5) * 0.2;
-          leftUpperArm.rotation.y = Math.sin(gestureTime * 1.8) * 0.15;
-        }
+        // パターン1: 大きく手を振る（挨拶）
         if (rightUpperArm) {
-          rightUpperArm.rotation.z = rightUpperArmBase - Math.sin(gestureTime * 2) * 0.3 * gestureIntensity;
-          rightUpperArm.rotation.x = rightUpperArmXBase + Math.sin(gestureTime * 2.5 + Math.PI) * 0.2;
-          rightUpperArm.rotation.y = -Math.sin(gestureTime * 1.8) * 0.15;
+          // 腕を高く上げる
+          rightUpperArm.rotation.z = Math.PI * 0.6; // 大きく横に上げる
+          rightUpperArm.rotation.x = -Math.PI * 0.3; // 前に出す
+        }
+        if (rightLowerArm) {
+          // 肘から先を振る
+          rightLowerArm.rotation.x = -Math.PI * 0.2;
+          rightLowerArm.rotation.z = Math.sin(time * 5) * 0.4; // 速く大きく振る
+        }
+        if (rightHand) {
+          // 手首も振る
+          rightHand.rotation.z = Math.sin(time * 5) * 0.3;
+        }
+        // 左手は自然に下ろす
+        if (leftUpperArm) {
+          leftUpperArm.rotation.z = leftUpperArmBase;
         }
       } else if (gesturePattern === 1) {
-        // パターン2: 手を振るような動き
-        if (rightUpperArm) {
-          rightUpperArm.rotation.z = rightUpperArmBase + 0.3;
-          rightUpperArm.rotation.x = -0.2;
-          rightUpperArm.rotation.y = Math.sin(gestureTime * 3) * 0.3;
-        }
-        if (rightLowerArm) {
-          rightLowerArm.rotation.x = -0.4;
-          rightLowerArm.rotation.z = Math.sin(gestureTime * 4) * 0.2;
-        }
-        // 左手は自然に
+        // パターン2: 両手を大きく広げる（説明・アピール）
         if (leftUpperArm) {
-          leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(time * 0.7) * 0.03;
-          leftUpperArm.rotation.x = leftUpperArmXBase + Math.sin(time * 0.9) * 0.02;
-        }
-      } else {
-        // パターン3: 考えるような仕草（腕を組む風）
-        if (leftUpperArm) {
-          leftUpperArm.rotation.z = -Math.PI * 0.35;
-          leftUpperArm.rotation.x = Math.PI * 0.2;
-          leftUpperArm.rotation.y = Math.PI * 0.1;
+          leftUpperArm.rotation.z = -Math.PI * 0.7; // 左腕を大きく横に
+          leftUpperArm.rotation.x = Math.sin(gestureTime) * 0.2;
+          leftUpperArm.rotation.y = Math.PI * 0.2;
         }
         if (rightUpperArm) {
-          rightUpperArm.rotation.z = Math.PI * 0.35;
-          rightUpperArm.rotation.x = Math.PI * 0.2;
-          rightUpperArm.rotation.y = -Math.PI * 0.1;
+          rightUpperArm.rotation.z = Math.PI * 0.7; // 右腕を大きく横に
+          rightUpperArm.rotation.x = Math.sin(gestureTime) * 0.2;
+          rightUpperArm.rotation.y = -Math.PI * 0.2;
         }
         if (leftLowerArm) {
-          leftLowerArm.rotation.y = Math.PI * 0.4;
+          leftLowerArm.rotation.y = Math.sin(gestureTime * 1.5) * 0.3;
         }
         if (rightLowerArm) {
-          rightLowerArm.rotation.y = -Math.PI * 0.4;
+          rightLowerArm.rotation.y = -Math.sin(gestureTime * 1.5) * 0.3;
         }
-      }
-      
-      // 基本の腕の動き（パターン0と2の時）
-      if (gesturePattern !== 1) {
-        if (leftLowerArm && gesturePattern === 0) {
-          leftLowerArm.rotation.y = Math.PI * 0.05 + Math.sin(gestureTime * 2.2) * 0.1;
-          leftLowerArm.rotation.z = -Math.PI * 0.02 + Math.sin(gestureTime * 1.5) * 0.05;
+        // 手のひらを開く
+        if (leftHand) {
+          leftHand.rotation.x = -Math.PI * 0.1;
         }
-        if (rightLowerArm && gesturePattern === 0) {
-          rightLowerArm.rotation.y = -Math.PI * 0.05 - Math.sin(gestureTime * 2.2) * 0.1;
-          rightLowerArm.rotation.z = Math.PI * 0.02 - Math.sin(gestureTime * 1.5) * 0.05;
+        if (rightHand) {
+          rightHand.rotation.x = -Math.PI * 0.1;
+        }
+      } else if (gesturePattern === 2) {
+        // パターン3: 指さし（右手で前を指す）
+        if (rightUpperArm) {
+          rightUpperArm.rotation.z = Math.PI * 0.3;
+          rightUpperArm.rotation.x = -Math.PI * 0.5; // 前方に腕を出す
+          rightUpperArm.rotation.y = 0;
+        }
+        if (rightLowerArm) {
+          rightLowerArm.rotation.x = -Math.PI * 0.1; // 腕をまっすぐ伸ばす
+        }
+        if (rightHand) {
+          rightHand.rotation.x = 0;
+          rightHand.rotation.z = Math.sin(time * 3) * 0.1; // 少し動かす
+        }
+        // 左手は腰に
+        if (leftUpperArm) {
+          leftUpperArm.rotation.z = -Math.PI * 0.3;
+          leftUpperArm.rotation.x = Math.PI * 0.3;
+        }
+        if (leftLowerArm) {
+          leftLowerArm.rotation.y = Math.PI * 0.5;
+        }
+      } else {
+        // パターン4: ガッツポーズ（両手を握って上下）
+        if (leftUpperArm) {
+          leftUpperArm.rotation.z = -Math.PI * 0.2 + Math.sin(time * 3) * 0.2;
+          leftUpperArm.rotation.x = -Math.PI * 0.3;
+        }
+        if (rightUpperArm) {
+          rightUpperArm.rotation.z = Math.PI * 0.2 - Math.sin(time * 3) * 0.2;
+          rightUpperArm.rotation.x = -Math.PI * 0.3;
+        }
+        if (leftLowerArm) {
+          leftLowerArm.rotation.x = -Math.PI * 0.6;
+        }
+        if (rightLowerArm) {
+          rightLowerArm.rotation.x = -Math.PI * 0.6;
+        }
+        // 手を握る
+        if (leftHand) {
+          leftHand.rotation.x = Math.PI * 0.3;
+        }
+        if (rightHand) {
+          rightHand.rotation.x = Math.PI * 0.3;
         }
       }
 
