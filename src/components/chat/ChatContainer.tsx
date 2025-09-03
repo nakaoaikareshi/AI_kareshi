@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Settings, ShoppingBag, Heart, Gift, Video } from 'lucide-react';
+import { Settings, ShoppingBag, Heart, Gift, Video, Image } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { useCharacterStore } from '@/store/characterStore';
 import { useUserStore } from '@/store/userStore';
@@ -17,6 +17,7 @@ import { MoodIndicator } from './MoodIndicator';
 import { DailyEventNotification } from './DailyEventNotification';
 import { VRMAvatar } from '@/components/avatar/VRMAvatar';
 import { VideoCallModal } from '@/components/video/VideoCallModal';
+import { BackgroundModal } from '@/components/background/BackgroundModal';
 import { speechSynthesis } from '@/utils/speechSynthesis';
 
 export const ChatContainer: React.FC = () => {
@@ -31,6 +32,7 @@ export const ChatContainer: React.FC = () => {
   const [showMemories, setShowMemories] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
+  const [showBackground, setShowBackground] = useState(false);
   const [moodState, setMoodState] = useState<MoodState | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState<'happy' | 'sad' | 'surprised' | 'angry' | 'love' | 'normal'>('normal');
@@ -328,6 +330,13 @@ export const ChatContainer: React.FC = () => {
         
         <div className="flex items-center space-x-0.5 sm:space-x-1 flex-shrink-0">
           <button
+            onClick={() => setShowBackground(true)}
+            className="p-1.5 sm:p-2 text-indigo-500 hover:bg-indigo-50 rounded-full transition-colors"
+            title="背景"
+          >
+            <Image size={16} className="sm:w-5 sm:h-5" />
+          </button>
+          <button
             onClick={() => setShowVideoCall(true)}
             className="p-1.5 sm:p-2 text-purple-500 hover:bg-purple-50 rounded-full transition-colors"
             title="ビデオ通話"
@@ -437,6 +446,10 @@ export const ChatContainer: React.FC = () => {
         isOpen={showVideoCall}
         onClose={() => setShowVideoCall(false)}
         onSendMessage={handleSendMessage}
+      />
+      <BackgroundModal
+        isOpen={showBackground}
+        onClose={() => setShowBackground(false)}
       />
 
       {/* 日常イベント通知 */}

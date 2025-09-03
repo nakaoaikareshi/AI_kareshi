@@ -6,6 +6,7 @@ import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { AvatarSettings } from '@/types';
+import { useBackgroundStore } from '@/store/backgroundStore';
 
 interface VRMAvatarProps {
   avatar: AvatarSettings;
@@ -33,6 +34,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { background } = useBackgroundStore();
 
   // サイズ設定
   const dimensions = {
@@ -226,15 +228,78 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // シーン作成
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf0f0f0);
+        
+        // 背景設定の適用
+        if (background.type === 'preset') {
+          // プリセット背景の色を適用
+          const presetColors: Record<string, string> = {
+            bedroom: '#FFF5F5',
+            living: '#F5F5FF',
+            cafe: '#FFF9F0',
+            park: '#F0FFF0',
+            beach: '#F0FFFF',
+            city: '#F5F5F5',
+            school: '#FFFAF0',
+            library: '#FAF5FF',
+          };
+          const bgColor = presetColors[background.presetId || 'bedroom'] || '#F0F0F0';
+          scene.background = new THREE.Color(bgColor);
+        } else if (background.type === 'room' && background.roomConfig) {
+          // ルームカスタマイズの場合
+          scene.background = new THREE.Color(background.roomConfig.wallColor);
+          
+          // 床の追加
+          const floorGeometry = new THREE.PlaneGeometry(10, 10);
+          const floorColors: Record<string, string> = {
+            wood: '#8B4513',
+            carpet: '#696969',
+            tile: '#E0E0E0',
+          };
+          const floorMaterial = new THREE.MeshPhongMaterial({ 
+            color: floorColors[background.roomConfig.floorType] || '#8B4513',
+            side: THREE.DoubleSide
+          });
+          const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+          floor.rotation.x = -Math.PI / 2;
+          floor.position.y = -1.5;
+          scene.add(floor);
+        } else {
+          scene.background = new THREE.Color(0xf0f0f0);
+        }
+        
         sceneRef.current = scene;
 
-        // ライティング
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // ライティング設定
+        let ambientColor = 0xffffff;
+        let directionalColor = 0xffffff;
+        let ambientIntensity = 0.6;
+        let directionalIntensity = 0.4;
+        
+        if (background.type === 'room' && background.roomConfig) {
+          // 照明タイプに応じた色温度の設定
+          switch (background.roomConfig.lighting) {
+            case 'warm':
+              ambientColor = 0xFFE4B5;
+              directionalColor = 0xFFD700;
+              break;
+            case 'cool':
+              ambientColor = 0xE0F2FF;
+              directionalColor = 0xADD8E6;
+              break;
+            case 'natural':
+            default:
+              ambientColor = 0xffffff;
+              directionalColor = 0xffffff;
+              break;
+          }
+        }
+        
+        const ambientLight = new THREE.AmbientLight(ambientColor, ambientIntensity);
         scene.add(ambientLight);
         
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        const directionalLight = new THREE.DirectionalLight(directionalColor, directionalIntensity);
         directionalLight.position.set(1, 1, 1);
+        directionalLight.castShadow = true;
         scene.add(directionalLight);
 
         // カメラ
@@ -435,7 +500,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, height, avatar.vrmUrl]);
+  }, [width, height, avatar.vrmUrl, background]);
 
   // 感情状態の変更を監視
   useEffect(() => {

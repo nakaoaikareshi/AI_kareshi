@@ -48,6 +48,42 @@ export interface AvatarSettings {
   vrmUrl?: string; // VRMモデルのURL（オプション）
 }
 
+// Background System Types
+export interface BackgroundSettings {
+  type: 'preset' | 'custom' | 'room';
+  presetId?: string;
+  customUrl?: string;
+  roomConfig?: RoomConfiguration;
+  blur?: number; // 0-10
+  brightness?: number; // 0-100
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
+}
+
+export interface RoomConfiguration {
+  wallColor: string;
+  floorType: 'wood' | 'carpet' | 'tile';
+  floorColor: string;
+  furniture: RoomFurniture[];
+  decorations: RoomDecoration[];
+  lighting: 'warm' | 'cool' | 'natural';
+  windowType: 'none' | 'small' | 'large' | 'balcony';
+}
+
+export interface RoomFurniture {
+  id: string;
+  type: 'bed' | 'desk' | 'chair' | 'sofa' | 'shelf' | 'table';
+  position: { x: number; y: number; z: number };
+  rotation: number;
+  color?: string;
+}
+
+export interface RoomDecoration {
+  id: string;
+  type: 'poster' | 'plant' | 'clock' | 'photo' | 'lamp' | 'books';
+  position: { x: number; y: number; z: number };
+  scale?: number;
+}
+
 // Voice Settings Types
 export interface VoiceSettings {
   enabled: boolean;
