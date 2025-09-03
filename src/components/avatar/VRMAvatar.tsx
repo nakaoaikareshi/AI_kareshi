@@ -134,6 +134,10 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
   const setupIdleMotion = useCallback((vrm: VRM) => {
     if (!vrm || !vrm.humanoid) return;
 
+    // 初期ポーズの腕の角度を保存
+    const leftUpperArmBase = Math.PI * 0.25;
+    const rightUpperArmBase = -Math.PI * 0.25;
+
     const animate = () => {
       if (!vrmRef.current || !clockRef.current) return;
 
@@ -152,6 +156,16 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       if (head) {
         head.rotation.x = Math.sin(time * 1.5) * 0.02;
         head.rotation.y = Math.sin(time * 1.2) * 0.02;
+      }
+
+      // 腕の自然な揺れ（初期ポーズを維持しながら）
+      const leftUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
+      const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
+      if (leftUpperArm) {
+        leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(time * 0.8) * 0.02;
+      }
+      if (rightUpperArm) {
+        rightUpperArm.rotation.z = rightUpperArmBase + Math.sin(time * 0.8 + Math.PI) * 0.02;
       }
 
       // VRMの更新
@@ -238,6 +252,44 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
           // モデルの位置を調整（中央に配置、足まで表示）
           vrm.scene.position.set(-0.1, -0.45, 0);
+
+          // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
+          if (vrm.humanoid) {
+            // 腕を下ろす
+            const leftUpperArm = vrm.humanoid.getNormalizedBoneNode('leftUpperArm');
+            const rightUpperArm = vrm.humanoid.getNormalizedBoneNode('rightUpperArm');
+            const leftLowerArm = vrm.humanoid.getNormalizedBoneNode('leftLowerArm');
+            const rightLowerArm = vrm.humanoid.getNormalizedBoneNode('rightLowerArm');
+            
+            if (leftUpperArm) {
+              leftUpperArm.rotation.z = Math.PI * 0.25; // 45度下げる
+            }
+            if (rightUpperArm) {
+              rightUpperArm.rotation.z = -Math.PI * 0.25; // 45度下げる
+            }
+            if (leftLowerArm) {
+              leftLowerArm.rotation.z = Math.PI * 0.05; // わずかに曲げる
+            }
+            if (rightLowerArm) {
+              rightLowerArm.rotation.z = -Math.PI * 0.05; // わずかに曲げる
+            }
+            
+            // 手首をリラックスさせる
+            const leftHand = vrm.humanoid.getNormalizedBoneNode('leftHand');
+            const rightHand = vrm.humanoid.getNormalizedBoneNode('rightHand');
+            if (leftHand) {
+              leftHand.rotation.z = Math.PI * 0.02;
+            }
+            if (rightHand) {
+              rightHand.rotation.z = -Math.PI * 0.02;
+            }
+            
+            // 首を少し傾ける（自然な感じに）
+            const neck = vrm.humanoid.getNormalizedBoneNode('neck');
+            if (neck) {
+              neck.rotation.x = Math.PI * 0.02; // 少し下を向く
+            }
+          }
 
           // カメラのターゲットを体の中心に向ける
           const hips = vrm.humanoid?.getNormalizedBoneNode('hips');
