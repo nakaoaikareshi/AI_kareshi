@@ -44,6 +44,8 @@ export interface AvatarSettings {
   accessories: string[];
   jewelry: string[];
   makeup: string[];
+  // 3Dモデル
+  vrmUrl?: string; // VRMモデルのURL（オプション）
 }
 
 // Voice Settings Types

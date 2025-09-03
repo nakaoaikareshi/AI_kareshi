@@ -1,0 +1,350 @@
+'use client';
+
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import * as THREE from 'three';
+import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { AvatarSettings } from '@/types';
+
+interface VRMAvatarProps {
+  avatar: AvatarSettings;
+  size?: 'small' | 'medium' | 'large';
+  mood?: number;
+  isSpeaking?: boolean;
+  isBlinking?: boolean;
+  emotionState?: 'normal' | 'happy' | 'sad' | 'angry' | 'surprised' | 'love';
+}
+
+export const VRMAvatar: React.FC<VRMAvatarProps> = ({
+  avatar,
+  size = 'medium',
+  mood = 50,
+  isSpeaking = false,
+  isBlinking = true,
+  emotionState = 'normal',
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const vrmRef = useRef<VRM | null>(null);
+  const clockRef = useRef<THREE.Clock>(new THREE.Clock());
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // サイズ設定
+  const dimensions = {
+    small: { width: 150, height: 150 },
+    medium: { width: 300, height: 300 },
+    large: { width: 500, height: 500 },
+  };
+
+  const { width, height } = dimensions[size];
+
+  // 表情設定
+  const applyExpression = useCallback((vrm: VRM, emotion: string) => {
+    if (!vrm || !vrm.expressionManager) return;
+
+    // 全ての表情をリセット
+    vrm.expressionManager.setValue('neutral', 0);
+    vrm.expressionManager.setValue('happy', 0);
+    vrm.expressionManager.setValue('sad', 0);
+    vrm.expressionManager.setValue('angry', 0);
+    vrm.expressionManager.setValue('surprised', 0);
+    vrm.expressionManager.setValue('relaxed', 0);
+
+    // 感情に応じた表情を設定
+    switch (emotion) {
+      case 'happy':
+        vrm.expressionManager.setValue('happy', 1.0);
+        break;
+      case 'sad':
+        vrm.expressionManager.setValue('sad', 1.0);
+        break;
+      case 'angry':
+        vrm.expressionManager.setValue('angry', 1.0);
+        break;
+      case 'surprised':
+        vrm.expressionManager.setValue('surprised', 1.0);
+        break;
+      case 'love':
+        vrm.expressionManager.setValue('happy', 0.7);
+        vrm.expressionManager.setValue('relaxed', 0.3);
+        break;
+      default:
+        vrm.expressionManager.setValue('neutral', 1.0);
+    }
+
+    vrm.expressionManager.update();
+  }, []);
+
+  // まばたきアニメーション
+  const setupBlinking = useCallback((vrm: VRM) => {
+    if (!vrm || !vrm.expressionManager) return;
+
+    const blink = () => {
+      if (!vrmRef.current) return;
+      
+      // まばたきアニメーション
+      vrmRef.current.expressionManager?.setValue('blink', 1.0);
+      vrmRef.current.expressionManager?.update();
+      
+      setTimeout(() => {
+        if (vrmRef.current) {
+          vrmRef.current.expressionManager?.setValue('blink', 0);
+          vrmRef.current.expressionManager?.update();
+        }
+      }, 150);
+
+      // 次のまばたきまでのランダムな間隔
+      const nextBlink = Math.random() * 3000 + 2000;
+      setTimeout(blink, nextBlink);
+    };
+
+    // 初回まばたき開始
+    setTimeout(blink, 1000);
+  }, []);
+
+  // 口パクアニメーション
+  const setupLipSync = useCallback((vrm: VRM, speaking: boolean) => {
+    if (!vrm || !vrm.expressionManager) return;
+
+    if (speaking) {
+      const lipSyncInterval = setInterval(() => {
+        if (!vrmRef.current) {
+          clearInterval(lipSyncInterval);
+          return;
+        }
+        
+        const value = Math.random() * 0.8;
+        vrmRef.current.expressionManager?.setValue('aa', value);
+        vrmRef.current.expressionManager?.update();
+      }, 100);
+
+      return () => clearInterval(lipSyncInterval);
+    } else {
+      vrm.expressionManager.setValue('aa', 0);
+      vrm.expressionManager.update();
+    }
+  }, []);
+
+  // アイドルモーション（呼吸・揺れ）
+  const setupIdleMotion = useCallback((vrm: VRM) => {
+    if (!vrm || !vrm.humanoid) return;
+
+    const animate = () => {
+      if (!vrmRef.current || !clockRef.current) return;
+
+      const deltaTime = clockRef.current.getDelta();
+      const time = clockRef.current.getElapsedTime();
+
+      // 呼吸アニメーション
+      const breathAmount = Math.sin(time * 2) * 0.003;
+      const spine = vrmRef.current.humanoid.getNormalizedBoneNode('spine');
+      if (spine) {
+        spine.rotation.x = breathAmount;
+      }
+
+      // 頭の微妙な動き
+      const head = vrmRef.current.humanoid.getNormalizedBoneNode('head');
+      if (head) {
+        head.rotation.x = Math.sin(time * 1.5) * 0.02;
+        head.rotation.y = Math.sin(time * 1.2) * 0.02;
+      }
+
+      // VRMの更新
+      vrmRef.current.update(deltaTime);
+    };
+
+    return animate;
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const init = async () => {
+      try {
+        setIsLoading(true);
+
+        // シーン作成
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf0f0f0);
+        sceneRef.current = scene;
+
+        // ライティング
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        // カメラ
+        const camera = new THREE.PerspectiveCamera(
+          35,
+          width / height,
+          0.1,
+          1000
+        );
+        camera.position.set(0, 0.6, 2.5);
+        cameraRef.current = camera;
+
+        // レンダラー
+        const renderer = new THREE.WebGLRenderer({ 
+          antialias: true,
+          alpha: true 
+        });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        if (containerRef.current) {
+          containerRef.current.appendChild(renderer.domElement);
+        }
+        rendererRef.current = renderer;
+
+        // コントロール（デバッグ用、本番では無効化可能）
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 0.6, 0);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enablePan = false;
+        controls.enableZoom = false;
+        controls.minDistance = 1.5;
+        controls.maxDistance = 3.5;
+
+        // VRMローダー
+        const loader = new GLTFLoader();
+        loader.register((parser) => new VRMLoaderPlugin(parser));
+
+        // VRMモデルのURL（デフォルトまたはカスタム）
+        const modelUrl = avatar.vrmUrl || '/models/vrm/default.vrm';
+
+        try {
+          const gltf = await loader.loadAsync(modelUrl);
+          const vrm = gltf.userData.vrm as VRM;
+
+          // VRMの回転を修正
+          VRMUtils.rotateVRM0(vrm);
+          
+          // シーンに追加
+          scene.add(vrm.scene);
+          vrmRef.current = vrm;
+
+          // カメラを顔に向ける
+          const head = vrm.humanoid?.getNormalizedBoneNode('head');
+          if (head) {
+            camera.lookAt(head.position);
+          }
+
+          // 初期表情設定
+          applyExpression(vrm, emotionState);
+
+          // まばたき設定
+          if (isBlinking) {
+            setupBlinking(vrm);
+          }
+
+          // 口パク設定
+          setupLipSync(vrm, isSpeaking);
+
+          // アイドルモーション設定
+          const idleAnimation = setupIdleMotion(vrm);
+
+          // アニメーションループ
+          const animate = () => {
+            requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            if (idleAnimation) {
+              idleAnimation();
+            }
+
+            renderer.render(scene, camera);
+          };
+          animate();
+
+          setIsLoading(false);
+          setError(null);
+        } catch (loadError) {
+          console.error('VRMモデルのロードに失敗:', loadError);
+          setError('VRMモデルのロードに失敗しました');
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('3D初期化エラー:', err);
+        setError('3D表示の初期化に失敗しました');
+        setIsLoading(false);
+      }
+    };
+
+    init();
+
+    // クリーンアップ
+    return () => {
+      const container = containerRef.current;
+      const renderer = rendererRef.current;
+      
+      if (renderer) {
+        renderer.dispose();
+        if (container && renderer.domElement && container.contains(renderer.domElement)) {
+          container.removeChild(renderer.domElement);
+        }
+      }
+      if (sceneRef.current) {
+        sceneRef.current.clear();
+      }
+      if (vrmRef.current) {
+        VRMUtils.deepDispose(vrmRef.current.scene);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width, height, avatar.vrmUrl]);
+
+  // 感情状態の変更を監視
+  useEffect(() => {
+    if (vrmRef.current) {
+      applyExpression(vrmRef.current, emotionState);
+    }
+  }, [emotionState, applyExpression]);
+
+  // 話している状態の変更を監視
+  useEffect(() => {
+    if (vrmRef.current) {
+      return setupLipSync(vrmRef.current, isSpeaking);
+    }
+  }, [isSpeaking, setupLipSync]);
+
+  if (error) {
+    // エラー時はシンプルな代替表示
+    return (
+      <div className="flex items-center justify-center rounded-lg bg-gray-100" style={{ width, height }}>
+        <div className="text-center">
+          <p className="text-xs text-gray-500">3Dモデル読み込みエラー</p>
+          <p className="text-xs text-gray-400 mt-1">VRMファイルを配置してください</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" style={{ width, height }}>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+            <p className="text-xs text-gray-500">3Dモデル読み込み中...</p>
+          </div>
+        </div>
+      )}
+      <div 
+        ref={containerRef} 
+        className={`rounded-lg overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-500`}
+        style={{ width, height }}
+      />
+    </div>
+  );
+};

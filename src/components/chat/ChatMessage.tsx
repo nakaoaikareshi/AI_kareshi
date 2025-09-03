@@ -1,6 +1,6 @@
 import React from 'react';
 import { Message } from '@/types';
-import { Live2DAvatarWrapper } from '@/components/avatar/Live2DAvatarWrapper';
+import { VRMAvatarWrapper } from '@/components/avatar/VRMAvatarWrapper';
 import { useCharacterStore } from '@/store/characterStore';
 import { SpeechButton } from './SpeechButton';
 
@@ -24,7 +24,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       {!isUser && (
         <div className="mr-2 mt-1">
           {character?.avatar ? (
-            <Live2DAvatarWrapper 
+            <VRMAvatarWrapper 
               avatar={character.avatar} 
               size="small"
               mood={50}
