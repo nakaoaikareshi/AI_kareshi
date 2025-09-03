@@ -1,7 +1,32 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { AvatarSettings } from '@/types';
+import { FantasyAvatar } from './FantasyAvatar';
+
+interface Live2DModel {
+  width: number;
+  height: number;
+  scale: { set: (scale: number) => void };
+  position: { set: (x: number, y: number) => void };
+  autoUpdate: boolean;
+  internalModel?: {
+    eyeBlink?: boolean;
+    coreModel?: {
+      setParameterValueById: (id: string, value: number) => void;
+    };
+  };
+  expression?: (id: string) => void;
+  lipSyncInterval?: NodeJS.Timeout;
+}
+
+interface PIXIApplication {
+  view: HTMLCanvasElement;
+  stage: {
+    addChild: (child: Live2DModel) => void;
+  };
+  destroy: (removeView: boolean, options: Record<string, boolean>) => void;
+}
 
 interface Live2DAvatarProps {
   avatar: AvatarSettings;
@@ -21,8 +46,8 @@ export const Live2DAvatar: React.FC<Live2DAvatarProps> = ({
   emotionState = 'normal',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const appRef = useRef<any>(null);
-  const modelRef = useRef<any>(null);
+  const appRef = useRef<PIXIApplication | null>(null);
+  const modelRef = useRef<Live2DModel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +60,57 @@ export const Live2DAvatar: React.FC<Live2DAvatarProps> = ({
 
   const { width, height } = dimensions[size];
 
+  // 感情表現の適用
+  const applyEmotion = useCallback((model: Live2DModel, emotion: string) => {
+    if (!model || !model.internalModel) return;
+
+    const expressionMap: Record<string, string> = {
+      normal: 'neutral',
+      happy: 'smile',
+      sad: 'sad',
+      angry: 'angry',
+      surprised: 'surprised',
+      love: 'love',
+    };
+
+    const expressionId = expressionMap[emotion] || 'neutral';
+    
+    try {
+      if (model.expression) {
+        model.expression(expressionId);
+      }
+    } catch (err) {
+      console.warn('表情の設定に失敗:', err);
+    }
+  }, []);
+
+  // 口パク開始
+  const startLipSync = useCallback((model: Live2DModel) => {
+    if (!model) return;
+    
+    const lipSyncInterval = setInterval(() => {
+      const value = Math.random();
+      if (model.internalModel?.coreModel) {
+        model.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', value);
+      }
+    }, 100);
+
+    model.lipSyncInterval = lipSyncInterval;
+  }, []);
+
+  // 口パク停止
+  const stopLipSync = useCallback((model: Live2DModel) => {
+    if (!model) return;
+    
+    if (model.lipSyncInterval) {
+      clearInterval(model.lipSyncInterval);
+      if (model.internalModel?.coreModel) {
+        model.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', 0);
+      }
+      model.lipSyncInterval = undefined;
+    }
+  }, []);
+
   useEffect(() => {
     if (!canvasRef.current || typeof window === 'undefined') return;
 
@@ -44,10 +120,10 @@ export const Live2DAvatar: React.FC<Live2DAvatarProps> = ({
         
         // 動的にPIXIとLive2Dをインポート
         const PIXI = await import('pixi.js');
-        const { Live2DModel } = await import('pixi-live2d-display');
+        const { Live2DModel: ImportedLive2DModel } = await import('pixi-live2d-display');
         
         // グローバルPIXIを設定
-        (window as any).PIXI = PIXI;
+        (window as typeof window & { PIXI: typeof PIXI }).PIXI = PIXI;
 
         // PIXI Application作成
         const app = new PIXI.Application({
@@ -58,17 +134,15 @@ export const Live2DAvatar: React.FC<Live2DAvatarProps> = ({
           backgroundAlpha: 0,
           antialias: true,
           resolution: window.devicePixelRatio || 1,
-        });
+        }) as unknown as PIXIApplication;
         
         appRef.current = app;
 
         // Live2Dモデルのロード
-        // 注意: 実際のLive2Dモデルファイル（.model3.json）が必要
-        // ここではデモ用の無料モデルを使用
         const modelUrl = '/models/live2d/hiyori/hiyori.model3.json';
         
         try {
-          const model = await Live2DModel.from(modelUrl);
+          const model = await ImportedLive2DModel.from(modelUrl) as unknown as Live2DModel;
           modelRef.current = model;
 
           // モデルのスケールと位置調整
@@ -121,62 +195,9 @@ export const Live2DAvatar: React.FC<Live2DAvatarProps> = ({
       }
       modelRef.current = null;
     };
-  }, [width, height]); // 基本的な依存関係のみ
-
-  // 感情表現の適用
-  const applyEmotion = (model: any, emotion: string) => {
-    if (!model || !model.internalModel) return;
-
-    // Live2Dモデルの表情切り替え
-    // モデルに応じた表情IDを設定
-    const expressionMap: Record<string, string> = {
-      normal: 'neutral',
-      happy: 'smile',
-      sad: 'sad',
-      angry: 'angry',
-      surprised: 'surprised',
-      love: 'love',
-    };
-
-    const expressionId = expressionMap[emotion] || 'neutral';
-    
-    try {
-      if (model.expression) {
-        model.expression(expressionId);
-      }
-    } catch (err) {
-      console.warn('表情の設定に失敗:', err);
-    }
-  };
-
-  // 口パク開始
-  const startLipSync = (model: any) => {
-    if (!model) return;
-    
-    // 音声に合わせた口パク（簡易版）
-    const lipSyncInterval = setInterval(() => {
-      const value = Math.random();
-      if (model.internalModel && model.internalModel.coreModel) {
-        model.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', value);
-      }
-    }, 100);
-
-    // インターバルIDを保存（後でクリア用）
-    model.lipSyncInterval = lipSyncInterval;
-  };
-
-  // 口パク停止
-  const stopLipSync = (model: any) => {
-    if (!model) return;
-    
-    if (model.lipSyncInterval) {
-      clearInterval(model.lipSyncInterval);
-      if (model.internalModel && model.internalModel.coreModel) {
-        model.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', 0);
-      }
-      model.lipSyncInterval = null;
-    }
-  };
+    // 依存関係を最小限に
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width, height]);
 
   // 話している状態の変更を監視
   useEffect(() => {
@@ -187,33 +208,25 @@ export const Live2DAvatar: React.FC<Live2DAvatarProps> = ({
     } else {
       stopLipSync(modelRef.current);
     }
-  }, [isSpeaking]);
+  }, [isSpeaking, startLipSync, stopLipSync]);
 
   // 感情状態の変更を監視
   useEffect(() => {
     if (!modelRef.current) return;
     applyEmotion(modelRef.current, emotionState);
-  }, [emotionState]);
+  }, [emotionState, applyEmotion]);
 
   // エラー時のフォールバック
   if (error) {
-    // FantasyAvatarコンポーネントを動的インポート
-    const [FallbackAvatar, setFallbackAvatar] = useState<React.ComponentType<any> | null>(null);
-    
-    useEffect(() => {
-      import('./FantasyAvatar').then(module => {
-        setFallbackAvatar(() => module.FantasyAvatar);
-      });
-    }, []);
-
-    if (FallbackAvatar) {
-      return <FallbackAvatar avatar={avatar} size={size} mood={mood} isSpeaking={isSpeaking} isBlinking={isBlinking} emotionState={emotionState} />;
-    }
-    
     return (
-      <div className="flex items-center justify-center" style={{ width, height }}>
-        <p className="text-xs text-gray-500">アバター読み込みエラー</p>
-      </div>
+      <FantasyAvatar 
+        avatar={avatar} 
+        size={size} 
+        mood={mood} 
+        isSpeaking={isSpeaking} 
+        isBlinking={isBlinking} 
+        emotionState={emotionState} 
+      />
     );
   }
 
