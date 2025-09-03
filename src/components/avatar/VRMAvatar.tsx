@@ -245,12 +245,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          65,  // 視野角をさらに広げて足まで確実に入るように
+          60,  // 視野角を適度に設定
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 1.2, 1.8);  // カメラを少し高く、近くに
+        camera.position.set(0, 1.5, 2.2);  // カメラをモデルに合わせて調整
         cameraRef.current = camera;
 
         // レンダラー
@@ -269,12 +269,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 1.2, 0);  // 画面中央を見る
+        controls.target.set(0, 1.5, 0);  // モデルの中心を見る
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
         controls.enableZoom = true;
-        controls.minDistance = 1.5;
+        controls.minDistance = 1.8;
         controls.maxDistance = 4.0;
 
         // VRMローダー
@@ -291,15 +291,15 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           // VRMの回転を修正
           VRMUtils.rotateVRM0(vrm);
           
-          // モデルのスケール調整（全身が収まるように少し小さく）
-          vrm.scene.scale.set(0.7, 0.7, 0.7);
+          // モデルのスケール調整（適切なサイズを維持）
+          vrm.scene.scale.set(1.0, 1.0, 1.0);  // 元のサイズに戻す
           
           // シーンに追加
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
           // モデルの位置を調整（中央に配置、全身表示）
-          vrm.scene.position.set(0, 0.8, 0);  // モデルを上に移動して画面中央に配置
+          vrm.scene.position.set(0, 1.5, 0);  // モデルをさらに上に移動して画面中央に配置
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -370,10 +370,10 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             
             // 全身の中心（腰と頭の中間）をターゲットに
             const centerY = (hipsWorldPosition.y + headWorldPosition.y) / 2;
-            controls.target.set(0, centerY + 0.2, 0);
+            controls.target.set(0, centerY, 0);
             
             // カメラ位置を調整して全身が画面中央に収まるように
-            camera.position.set(0, centerY + 0.1, 1.8);
+            camera.position.set(0, centerY, 2.2);
             controls.update();
           }
 
