@@ -236,45 +236,66 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         const textureLoader = new THREE.TextureLoader();
         
         if (background && background.type === 'preset') {
-          // プリセット背景画像のURLマッピング
-          const presetBackgrounds: Record<string, string> = {
-            bedroom: 'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=1920&h=1080&fit=crop',
-            living: 'https://images.unsplash.com/photo-1565183928294-7d21b36c9c24?w=1920&h=1080&fit=crop',
-            cafe: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1920&h=1080&fit=crop',
-            park: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=1920&h=1080&fit=crop',
-            beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&h=1080&fit=crop',
-            city: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1920&h=1080&fit=crop',
-            school: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1920&h=1080&fit=crop',
-            library: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1920&h=1080&fit=crop',
+          // プリセット背景の作成（グラデーション背景）
+          const presetGradients: Record<string, { color1: string; color2: string; color3: string }> = {
+            bedroom: { color1: '#FFE4E1', color2: '#FFF0F5', color3: '#FFF5EE' },
+            living: { color1: '#E6E6FA', color2: '#F0F8FF', color3: '#F5F5F5' },
+            cafe: { color1: '#F5DEB3', color2: '#FFE4B5', color3: '#FAEBD7' },
+            park: { color1: '#90EE90', color2: '#98FB98', color3: '#87CEEB' },
+            beach: { color1: '#87CEEB', color2: '#ADD8E6', color3: '#F0E68C' },
+            city: { color1: '#DCDCDC', color2: '#C0C0C0', color3: '#A9A9A9' },
+            school: { color1: '#F0E68C', color2: '#FAFAD2', color3: '#FFF8DC' },
+            library: { color1: '#D2B48C', color2: '#DEB887', color3: '#F5DEB3' },
           };
           
-          const bgUrl = presetBackgrounds[background.presetId || 'bedroom'];
-          if (bgUrl) {
-            textureLoader.load(
-              bgUrl,
-              (texture) => {
-                // 背景を平面として追加（適切なスケール）
-                const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
-                const backgroundMaterial = new THREE.MeshBasicMaterial({ 
-                  map: texture,
-                  side: THREE.DoubleSide
-                });
-                const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
-                backgroundMesh.position.z = -3; // キャラクターの後ろに配置
-                backgroundMesh.position.y = 1.5; // 高さを調整
-                scene.add(backgroundMesh);
-                
-                // シーンの背景色も設定
-                scene.background = new THREE.Color('#F5F5F5');
-                console.log('Applied preset background image:', bgUrl);
-              },
-              undefined,
-              (error) => {
-                console.error('Failed to load background image:', error);
-                // フォールバックとして色を使用
-                scene.background = new THREE.Color('#FFF5F5');
-              }
-            );
+          const gradient = presetGradients[background.presetId || 'bedroom'];
+          
+          // グラデーション背景を作成
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            const grd = ctx.createLinearGradient(0, 0, 0, 512);
+            grd.addColorStop(0, gradient.color1);
+            grd.addColorStop(0.5, gradient.color2);
+            grd.addColorStop(1, gradient.color3);
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // グラデーションの上に簡単な模様を追加
+            if (background.presetId === 'bedroom' || background.presetId === 'living') {
+              // 窓のような矩形を追加
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+              ctx.fillRect(100, 50, 150, 200);
+              ctx.fillRect(260, 50, 150, 200);
+            } else if (background.presetId === 'park' || background.presetId === 'beach') {
+              // 雲のような円を追加
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+              ctx.beginPath();
+              ctx.arc(100, 100, 40, 0, Math.PI * 2);
+              ctx.arc(150, 100, 50, 0, Math.PI * 2);
+              ctx.arc(200, 100, 40, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            
+            // 背景を平面として追加
+            const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
+            const backgroundMaterial = new THREE.MeshBasicMaterial({ 
+              map: texture,
+              side: THREE.DoubleSide
+            });
+            const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+            backgroundMesh.position.z = -3;
+            backgroundMesh.position.y = 1.5;
+            scene.add(backgroundMesh);
+            
+            // シーンの背景色も設定
+            scene.background = new THREE.Color(gradient.color2);
+            console.log('Applied preset background gradient');
           }
         } else if (background && background.type === 'room' && background.roomConfig) {
           // ルームカスタマイズの場合
@@ -296,31 +317,43 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           floor.position.y = -1.5;
           scene.add(floor);
         } else {
-          // デフォルト背景（寝室の画像）
-          textureLoader.load(
-            'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=1920&h=1080&fit=crop',
-            (texture) => {
-              // 背景を平面として追加（適切なスケール）
-              const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
-              const backgroundMaterial = new THREE.MeshBasicMaterial({ 
-                map: texture,
-                side: THREE.DoubleSide
-              });
-              const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
-              backgroundMesh.position.z = -3; // キャラクターの後ろに配置
-              backgroundMesh.position.y = 1.5; // 高さを調整
-              scene.add(backgroundMesh);
-              
-              // シーンの背景色も設定
-              scene.background = new THREE.Color('#F5F5F5');
-              console.log('Applied default background image');
-            },
-            undefined,
-            (error) => {
-              console.error('Failed to load default background image:', error);
-              scene.background = new THREE.Color('#FFF5F5');
-            }
-          );
+          // デフォルト背景（寝室のグラデーション）
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            // ピンク系のグラデーション（寝室）
+            const grd = ctx.createLinearGradient(0, 0, 0, 512);
+            grd.addColorStop(0, '#FFE4E1');
+            grd.addColorStop(0.5, '#FFF0F5');
+            grd.addColorStop(1, '#FFF5EE');
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // 窓のような矩形を追加
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(100, 50, 150, 200);
+            ctx.fillRect(260, 50, 150, 200);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            
+            // 背景を平面として追加
+            const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
+            const backgroundMaterial = new THREE.MeshBasicMaterial({ 
+              map: texture,
+              side: THREE.DoubleSide
+            });
+            const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+            backgroundMesh.position.z = -3;
+            backgroundMesh.position.y = 1.5;
+            scene.add(backgroundMesh);
+            
+            // シーンの背景色も設定
+            scene.background = new THREE.Color('#FFF0F5');
+            console.log('Applied default background gradient');
+          }
         }
         
         sceneRef.current = scene;
