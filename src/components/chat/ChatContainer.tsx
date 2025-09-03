@@ -230,8 +230,8 @@ export const ChatContainer: React.FC = () => {
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-100 chat-container">
       {/* Character Display - Left side on PC */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-1/2 items-center justify-center p-8" style={{ backgroundColor: '#FFF5F5' }}>
-        <div className="text-center">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-1/2 items-center justify-center p-2" style={{ backgroundColor: '#FFF5F5' }}>
+        <div className="w-full h-full flex items-center justify-center">
           {/* Character Avatar - VRMを優先表示 */}
           <VRMAvatar 
             avatar={character.avatar || { 
@@ -255,31 +255,12 @@ export const ChatContainer: React.FC = () => {
               jewelry: [],
               makeup: []
             }} 
-            size="large" 
+            size="xlarge" 
             mood={moodState?.currentMood || 50}
             isSpeaking={isSpeaking}
             isBlinking={true}
             emotionState={currentEmotion}
           />
-          
-          {/* Character Info */}
-          <div className="mt-6">
-            <h2 className="text-2xl font-bold text-gray-800">{character.nickname}</h2>
-            <p className="text-gray-600 mt-2">{character.occupation || '秘密'}</p>
-            
-            {/* Mood Display */}
-            {moodState && (
-              <div className="mt-4 inline-flex items-center px-4 py-2 bg-white rounded-full shadow-sm">
-                <span className="text-sm text-gray-600">気分:</span>
-                <span className="ml-2 text-sm font-medium">
-                  {moodState.currentMood >= 80 ? '😊 とても良い' :
-                   moodState.currentMood >= 60 ? '🙂 良い' :
-                   moodState.currentMood >= 40 ? '😐 普通' :
-                   moodState.currentMood >= 20 ? '😔 少し落ち込み' : '😢 落ち込んでいる'}
-                </span>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 

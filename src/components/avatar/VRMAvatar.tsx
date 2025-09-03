@@ -10,7 +10,7 @@ import { useBackgroundStore } from '@/store/backgroundStore';
 
 interface VRMAvatarProps {
   avatar: AvatarSettings;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
   mood?: number;
   isSpeaking?: boolean;
   isBlinking?: boolean;
@@ -41,6 +41,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
     small: { width: 150, height: 200 },
     medium: { width: 300, height: 400 },
     large: { width: 500, height: 650 },
+    xlarge: { width: 700, height: 900 },
   };
 
   const { width, height } = dimensions[size];
