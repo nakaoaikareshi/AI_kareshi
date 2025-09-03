@@ -245,12 +245,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          45,  // 視野角を広げて全身が入るように
+          50,  // 視野角をさらに広げる
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 1.0, 3.0);  // カメラを少し近づける
+        camera.position.set(0, 0.8, 2.5);  // カメラをもっと引いて全身を映す
         cameraRef.current = camera;
 
         // レンダラー
@@ -269,12 +269,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.8, 0);  // 体の中心を見る
+        controls.target.set(0, 0.3, 0);  // もっと下の方（腰あたり）を中心に
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
         controls.enableZoom = true;
-        controls.minDistance = 2.0;
+        controls.minDistance = 1.8;
         controls.maxDistance = 4.0;
 
         // VRMローダー
@@ -291,15 +291,15 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           // VRMの回転を修正
           VRMUtils.rotateVRM0(vrm);
           
-          // モデルのスケール調整（必要に応じて調整）
-          vrm.scene.scale.set(1.0, 1.0, 1.0);
+          // モデルのスケール調整（全身が収まるように少し小さく）
+          vrm.scene.scale.set(0.9, 0.9, 0.9);
           
           // シーンに追加
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
           // モデルの位置を調整（中央に配置、全身表示）
-          vrm.scene.position.set(0, -0.7, 0);  // さらに下げて足まで表示
+          vrm.scene.position.set(0, -0.9, 0);  // もっと下げて確実に足まで表示
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -358,19 +358,18 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             }
           }
 
-          // カメラのターゲットを体の中心に向ける
+          // カメラのターゲットを全身の中心に向ける
           const hips = vrm.humanoid?.getNormalizedBoneNode('hips');
-          const head = vrm.humanoid?.getNormalizedBoneNode('head');
-          if (hips && head) {
-            // 腰と頭の中間点をターゲットに設定
+          if (hips) {
+            // 腰の位置を基準にカメラターゲットを設定
             const hipsWorldPosition = new THREE.Vector3();
-            const headWorldPosition = new THREE.Vector3();
             hips.getWorldPosition(hipsWorldPosition);
-            head.getWorldPosition(headWorldPosition);
             
-            // 体の中心を計算
-            const centerY = (hipsWorldPosition.y + headWorldPosition.y) / 2;
-            controls.target.set(0, centerY - 0.1, 0);  // 少し下を中心に
+            // 腰より少し上を見る（全身のバランスが良い位置）
+            controls.target.set(0, hipsWorldPosition.y - 0.2, 0);
+            
+            // カメラ位置も調整して全身が入るように
+            camera.position.set(0, hipsWorldPosition.y + 0.2, 2.2);
             controls.update();
           }
 
