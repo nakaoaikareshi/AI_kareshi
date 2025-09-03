@@ -15,7 +15,6 @@ import { MemoryAlbum } from '@/components/memories/MemoryAlbum';
 import { ScheduleModal } from '@/components/schedule/ScheduleModal';
 import { MoodIndicator } from './MoodIndicator';
 import { DailyEventNotification } from './DailyEventNotification';
-import { AnimeAvatar } from '@/components/avatar/AnimeAvatar';
 import { VRMAvatar } from '@/components/avatar/VRMAvatar';
 import { VideoCallModal } from '@/components/video/VideoCallModal';
 import { speechSynthesis } from '@/utils/speechSynthesis';
@@ -235,10 +234,24 @@ export const ChatContainer: React.FC = () => {
           <VRMAvatar 
             avatar={character.avatar || { 
               vrmUrl: '/models/vrm/character.vrm',
+              hairStyle: 'medium',
               hairColor: '#8B4513',
               eyeColor: '#4169E1',
-              skinColor: '#FFE0BD',
-              clothingStyle: 'casual'
+              eyeShape: 'round',
+              eyebrowStyle: 'straight',
+              noseStyle: 'normal',
+              mouthStyle: 'normal',
+              skinTone: '#FFE0BD',
+              faceShape: 'oval',
+              bodyType: 'normal',
+              height: 'medium',
+              outfit: 'casual',
+              topWear: 'shirt',
+              bottomWear: 'pants',
+              shoes: 'sneakers',
+              accessories: [],
+              jewelry: [],
+              makeup: []
             }} 
             size="large" 
             mood={moodState?.currentMood || 50}
@@ -278,10 +291,24 @@ export const ChatContainer: React.FC = () => {
             <VRMAvatar 
               avatar={character.avatar || { 
                 vrmUrl: '/models/vrm/character.vrm',
+                hairStyle: 'medium',
                 hairColor: '#8B4513',
                 eyeColor: '#4169E1',
-                skinColor: '#FFE0BD',
-                clothingStyle: 'casual'
+                eyeShape: 'round',
+                eyebrowStyle: 'straight',
+                noseStyle: 'normal',
+                mouthStyle: 'normal',
+                skinTone: '#FFE0BD',
+                faceShape: 'oval',
+                bodyType: 'normal',
+                height: 'medium',
+                outfit: 'casual',
+                topWear: 'shirt',
+                bottomWear: 'pants',
+                shoes: 'sneakers',
+                accessories: [],
+                jewelry: [],
+                makeup: []
               }} 
               size="small" 
               mood={moodState?.currentMood || 50}
