@@ -231,30 +231,21 @@ export const ChatContainer: React.FC = () => {
       {/* Character Display - Left side on PC */}
       <div className="hidden lg:flex lg:w-1/3 xl:w-2/5 bg-gradient-to-br from-purple-50 to-pink-50 items-center justify-center p-8">
         <div className="text-center">
-          {/* Character Avatar */}
-          {character.avatar?.vrmUrl ? (
-            <VRMAvatar 
-              avatar={character.avatar} 
-              size="large" 
-              mood={moodState?.currentMood || 50}
-              isSpeaking={isSpeaking}
-              isBlinking={true}
-              emotionState={currentEmotion}
-            />
-          ) : character.avatar ? (
-            <AnimeAvatar 
-              avatar={character.avatar} 
-              size="large" 
-              mood={moodState?.currentMood || 50}
-              isSpeaking={isSpeaking}
-              isBlinking={true}
-              emotionState={currentEmotion}
-            />
-          ) : (
-            <div className="w-64 h-64 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-6xl mx-auto">
-              💕
-            </div>
-          )}
+          {/* Character Avatar - VRMを優先表示 */}
+          <VRMAvatar 
+            avatar={character.avatar || { 
+              vrmUrl: '/models/vrm/character.vrm',
+              hairColor: '#8B4513',
+              eyeColor: '#4169E1',
+              skinColor: '#FFE0BD',
+              clothingStyle: 'casual'
+            }} 
+            size="large" 
+            mood={moodState?.currentMood || 50}
+            isSpeaking={isSpeaking}
+            isBlinking={true}
+            emotionState={currentEmotion}
+          />
           
           {/* Character Info */}
           <div className="mt-6">
@@ -282,22 +273,22 @@ export const ChatContainer: React.FC = () => {
         {/* Header */}
         <div className="bg-white border-b px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-          {/* Mobile only avatar */}
+          {/* Mobile only avatar - VRMを優先表示 */}
           <div className="lg:hidden">
-            {character.avatar ? (
-              <AnimeAvatar 
-                avatar={character.avatar} 
-                size="small" 
-                mood={moodState?.currentMood || 50}
-                isSpeaking={isSpeaking}
-                isBlinking={true}
-                emotionState={currentEmotion}
-              />
-            ) : (
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                💕
-              </div>
-            )}
+            <VRMAvatar 
+              avatar={character.avatar || { 
+                vrmUrl: '/models/vrm/character.vrm',
+                hairColor: '#8B4513',
+                eyeColor: '#4169E1',
+                skinColor: '#FFE0BD',
+                clothingStyle: 'casual'
+              }} 
+              size="small" 
+              mood={moodState?.currentMood || 50}
+              isSpeaking={isSpeaking}
+              isBlinking={true}
+              emotionState={currentEmotion}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="font-bold text-gray-900 text-base sm:text-lg truncate">{character.nickname}</h1>
