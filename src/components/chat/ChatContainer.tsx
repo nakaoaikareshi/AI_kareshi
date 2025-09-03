@@ -19,6 +19,7 @@ import { VRMAvatar } from '@/components/avatar/VRMAvatar';
 import { VideoCallModal } from '@/components/video/VideoCallModal';
 import { BackgroundModal } from '@/components/background/BackgroundModal';
 import { speechSynthesis } from '@/utils/speechSynthesis';
+import { analyzeEmotionIntensity, inferEmotionFromContext, smoothEmotionTransition, EmotionType } from '@/utils/emotionAnalyzer';
 
 export const ChatContainer: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,7 +36,8 @@ export const ChatContainer: React.FC = () => {
   const [showBackground, setShowBackground] = useState(false);
   const [moodState, setMoodState] = useState<MoodState | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [currentEmotion, setCurrentEmotion] = useState<'happy' | 'sad' | 'surprised' | 'angry' | 'love' | 'normal'>('normal');
+  const [currentEmotion, setCurrentEmotion] = useState<EmotionType>('normal');
+  const [emotionIntensity, setEmotionIntensity] = useState(50);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -55,30 +57,37 @@ export const ChatContainer: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // メッセージ内容に基づく感情分析
+  // 強化された感情分析
   useEffect(() => {
     if (messages.length === 0) return;
     
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && !lastMessage.isUser) {
-      const content = lastMessage.content.toLowerCase();
+      // 過去のメッセージから文脈を取得
+      const previousMessages = messages
+        .slice(-5, -1)
+        .filter(m => !m.isUser)
+        .map(m => m.content);
       
-      if (content.includes('嬉しい') || content.includes('やったー') || content.includes('最高')) {
-        setCurrentEmotion('happy');
-      } else if (content.includes('好き') || content.includes('愛してる') || content.includes('💕')) {
-        setCurrentEmotion('love');
-      } else if (content.includes('悲しい') || content.includes('つらい') || content.includes('😢')) {
-        setCurrentEmotion('sad');
-      } else if (content.includes('えっ') || content.includes('本当') || content.includes('驚')) {
-        setCurrentEmotion('surprised');
-      } else if (content.includes('怒') || content.includes('むかつく') || content.includes('💢')) {
-        setCurrentEmotion('angry');
-      } else {
+      // 感情を分析
+      const { emotion, intensity } = analyzeEmotionIntensity(lastMessage.content);
+      const contextEmotion = inferEmotionFromContext(lastMessage.content, previousMessages);
+      
+      // 文脈を考慮した感情を選択
+      const finalEmotion = emotion !== 'normal' ? emotion : contextEmotion;
+      
+      // スムーズな感情遷移
+      const newEmotion = smoothEmotionTransition(currentEmotion, finalEmotion);
+      
+      setCurrentEmotion(newEmotion);
+      setEmotionIntensity(intensity);
+      
+      // 感情の持続時間を強度に応じて調整
+      const duration = 3000 + (intensity * 50); // 3秒〜8秒
+      setTimeout(() => {
         setCurrentEmotion('normal');
-      }
-      
-      // 3秒後に通常の表情に戻る
-      setTimeout(() => setCurrentEmotion('normal'), 3000);
+        setEmotionIntensity(50);
+      }, duration);
     }
   }, [messages]);
 
@@ -260,6 +269,7 @@ export const ChatContainer: React.FC = () => {
             isSpeaking={isSpeaking}
             isBlinking={true}
             emotionState={currentEmotion}
+            emotionIntensity={emotionIntensity}
           />
         </div>
       </div>

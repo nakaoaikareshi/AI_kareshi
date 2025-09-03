@@ -7,6 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { AvatarSettings } from '@/types';
 import { useBackgroundStore } from '@/store/backgroundStore';
+import { EmotionType } from '@/utils/emotionAnalyzer';
 
 interface VRMAvatarProps {
   avatar: AvatarSettings;
@@ -14,7 +15,8 @@ interface VRMAvatarProps {
   mood?: number;
   isSpeaking?: boolean;
   isBlinking?: boolean;
-  emotionState?: 'normal' | 'happy' | 'sad' | 'angry' | 'surprised' | 'love';
+  emotionState?: EmotionType;
+  emotionIntensity?: number;
 }
 
 export const VRMAvatar: React.FC<VRMAvatarProps> = ({
@@ -24,6 +26,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
   isSpeaking = false,
   isBlinking = true,
   emotionState = 'normal',
+  emotionIntensity = 50,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -46,8 +49,8 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
   const { width, height } = dimensions[size];
 
-  // 表情設定
-  const applyExpression = useCallback((vrm: VRM, emotion: string) => {
+  // 強化された表情設定（感情の強度に対応）
+  const applyExpression = useCallback((vrm: VRM, emotion: EmotionType, intensity: number = 50) => {
     if (!vrm || !vrm.expressionManager) return;
 
     // 全ての表情をリセット
@@ -57,24 +60,62 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
     vrm.expressionManager.setValue('angry', 0);
     vrm.expressionManager.setValue('surprised', 0);
     vrm.expressionManager.setValue('relaxed', 0);
+    vrm.expressionManager.setValue('blink', 0);
+    vrm.expressionManager.setValue('blinkLeft', 0);
+    vrm.expressionManager.setValue('blinkRight', 0);
+
+    // 感情の強度を0-1に正規化
+    const normalizedIntensity = Math.min(1, intensity / 100);
 
     // 感情に応じた表情を設定
     switch (emotion) {
       case 'happy':
-        vrm.expressionManager.setValue('happy', 1.0);
+        vrm.expressionManager.setValue('happy', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'sad':
-        vrm.expressionManager.setValue('sad', 1.0);
+        vrm.expressionManager.setValue('sad', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'angry':
-        vrm.expressionManager.setValue('angry', 1.0);
+        vrm.expressionManager.setValue('angry', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'surprised':
-        vrm.expressionManager.setValue('surprised', 1.0);
+        vrm.expressionManager.setValue('surprised', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'love':
-        vrm.expressionManager.setValue('happy', 0.7);
-        vrm.expressionManager.setValue('relaxed', 0.3);
+        vrm.expressionManager.setValue('happy', normalizedIntensity * 0.7);
+        vrm.expressionManager.setValue('relaxed', normalizedIntensity * 0.3);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
+        break;
+      case 'shy':
+        // 恥ずかしい表情（目を少し閉じて、微笑む）
+        vrm.expressionManager.setValue('happy', normalizedIntensity * 0.4);
+        vrm.expressionManager.setValue('blink', normalizedIntensity * 0.2);
+        vrm.expressionManager.setValue('relaxed', normalizedIntensity * 0.4);
+        break;
+      case 'excited':
+        // 興奮した表情（目を大きく開いて、笑顔）
+        vrm.expressionManager.setValue('happy', normalizedIntensity * 0.8);
+        vrm.expressionManager.setValue('surprised', normalizedIntensity * 0.2);
+        break;
+      case 'worried':
+        // 心配そうな表情（悲しみと驚きの混合）
+        vrm.expressionManager.setValue('sad', normalizedIntensity * 0.6);
+        vrm.expressionManager.setValue('surprised', normalizedIntensity * 0.2);
+        vrm.expressionManager.setValue('neutral', normalizedIntensity * 0.2);
         break;
       default:
         vrm.expressionManager.setValue('neutral', 1.0);
@@ -170,26 +211,26 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
       const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
       
-      // 腕を体に沿って真下に下ろす
+      // 腕を体の横に自然に下ろす（足の横に手が来るように）
       if (leftUpperArm) {
-        leftUpperArm.rotation.x = 0;  // まっすぐ
-        leftUpperArm.rotation.y = 0;  // まっすぐ
-        leftUpperArm.rotation.z = 0; // まっすぐ下に下ろす
+        leftUpperArm.rotation.x = 0;      // まっすぐ
+        leftUpperArm.rotation.y = 0;      // まっすぐ
+        leftUpperArm.rotation.z = -1.57;  // 90度下に（-π/2）
       }
       if (rightUpperArm) {
-        rightUpperArm.rotation.x = 0;  // まっすぐ
-        rightUpperArm.rotation.y = 0;  // まっすぐ
-        rightUpperArm.rotation.z = 0; // まっすぐ下に下ろす
+        rightUpperArm.rotation.x = 0;      // まっすぐ
+        rightUpperArm.rotation.y = 0;      // まっすぐ
+        rightUpperArm.rotation.z = 1.57;   // 90度下に（π/2）
       }
       if (leftLowerArm) {
-        leftLowerArm.rotation.x = 0;  // まっすぐ
-        leftLowerArm.rotation.y = 0;  // まっすぐ
-        leftLowerArm.rotation.z = 0;  // まっすぐ
+        leftLowerArm.rotation.x = 0;      // まっすぐ
+        leftLowerArm.rotation.y = 0;      // まっすぐ
+        leftLowerArm.rotation.z = 0;      // まっすぐ
       }
       if (rightLowerArm) {
-        rightLowerArm.rotation.x = 0;  // まっすぐ
-        rightLowerArm.rotation.y = 0;  // まっすぐ
-        rightLowerArm.rotation.z = 0;  // まっすぐ
+        rightLowerArm.rotation.x = 0;      // まっすぐ
+        rightLowerArm.rotation.y = 0;      // まっすぐ
+        rightLowerArm.rotation.z = 0;      // まっすぐ
       }
 
       // 重心移動（立ち姿勢を変える）
@@ -528,7 +569,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           }
 
           // 初期表情設定
-          applyExpression(vrm, emotionState);
+          applyExpression(vrm, emotionState, emotionIntensity);
 
           // まばたき設定
           if (isBlinking) {
@@ -595,9 +636,9 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
   // 感情状態の変更を監視
   useEffect(() => {
     if (vrmRef.current) {
-      applyExpression(vrmRef.current, emotionState);
+      applyExpression(vrmRef.current, emotionState, emotionIntensity);
     }
-  }, [emotionState, applyExpression]);
+  }, [emotionState, emotionIntensity, applyExpression]);
 
   // 話している状態の変更を監視
   useEffect(() => {

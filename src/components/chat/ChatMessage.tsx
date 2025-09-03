@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Message } from '@/types';
 import { VRMAvatarWrapper } from '@/components/avatar/VRMAvatarWrapper';
 import { useCharacterStore } from '@/store/characterStore';
+import { useVoiceStore } from '@/store/voiceStore';
 import { SpeechButton } from './SpeechButton';
+import { speechSynthesis } from '@/utils/speechSynthesis';
 
 interface ChatMessageProps {
   message: Message;
@@ -11,6 +13,24 @@ interface ChatMessageProps {
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isUser = message.isUser;
   const { character } = useCharacterStore();
+  const { voiceEnabled, autoPlay } = useVoiceStore();
+  
+  // 自動再生機能
+  useEffect(() => {
+    if (!isUser && voiceEnabled && autoPlay && character) {
+      // 新しいメッセージが追加されたら自動的に読み上げる
+      const isNewMessage = new Date().getTime() - new Date(message.timestamp).getTime() < 1000;
+      if (isNewMessage) {
+        speechSynthesis.speakWithPersonality(
+          message.content,
+          {
+            gender: character.gender,
+            personality: character.personality
+          }
+        );
+      }
+    }
+  }, [message.id]);
   
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString('ja-JP', {
@@ -63,7 +83,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             )}
           </div>
           
-          {!isUser && (
+          {!isUser && voiceEnabled && (
             <SpeechButton text={message.content} />
           )}
         </div>
