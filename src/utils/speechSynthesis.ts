@@ -114,7 +114,7 @@ export class SpeechSynthesisManager {
     return this.synth.getVoices();
   }
 
-  getCharacterVoice(gender: 'boyfriend' | 'girlfriend', personality?: Record<string, number>): SpeechSynthesisVoice | null {
+  getCharacterVoice(gender: 'boyfriend' | 'girlfriend', personality?: CharacterPersonality): SpeechSynthesisVoice | null {
     const voices = this.getJapaneseVoices();
     
     if (gender === 'girlfriend') {
