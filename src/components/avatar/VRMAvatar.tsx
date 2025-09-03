@@ -163,31 +163,31 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         head.rotation.y = Math.sin(time * 0.3 + Math.PI * 0.3) * 0.03;
       }
 
-      // 腕を組む（常時）
+      // 腕を組む（常時）- 前で組む
       const leftUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
       const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
       const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
       const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
       
-      // 腕を組む
+      // 腕を前で組む
       if (leftUpperArm) {
-        leftUpperArm.rotation.x = -Math.PI * 0.1;
-        leftUpperArm.rotation.y = Math.PI * 0.15;
-        leftUpperArm.rotation.z = -Math.PI * 0.15;
+        leftUpperArm.rotation.x = Math.PI * 0.2;  // 前に出す（正の値）
+        leftUpperArm.rotation.y = Math.PI * 0.1;  // 内側に向ける
+        leftUpperArm.rotation.z = -Math.PI * 0.1; // わずかに下げる
       }
       if (rightUpperArm) {
-        rightUpperArm.rotation.x = -Math.PI * 0.1;
-        rightUpperArm.rotation.y = -Math.PI * 0.15;
-        rightUpperArm.rotation.z = Math.PI * 0.15;
+        rightUpperArm.rotation.x = Math.PI * 0.2;  // 前に出す（正の値）
+        rightUpperArm.rotation.y = -Math.PI * 0.1; // 内側に向ける
+        rightUpperArm.rotation.z = Math.PI * 0.1;  // わずかに下げる
       }
       if (leftLowerArm) {
         leftLowerArm.rotation.x = 0;
-        leftLowerArm.rotation.y = Math.PI * 0.4;
+        leftLowerArm.rotation.y = Math.PI * 0.5;  // 肘を曲げて内側へ
         leftLowerArm.rotation.z = 0;
       }
       if (rightLowerArm) {
         rightLowerArm.rotation.x = 0;
-        rightLowerArm.rotation.y = -Math.PI * 0.4;
+        rightLowerArm.rotation.y = -Math.PI * 0.5; // 肘を曲げて内側へ
         rightLowerArm.rotation.z = 0;
       }
 
@@ -232,21 +232,38 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         // 背景設定の適用
         console.log('Background settings:', background); // デバッグ用
         
+        // テクスチャローダー
+        const textureLoader = new THREE.TextureLoader();
+        
         if (background && background.type === 'preset') {
-          // プリセット背景の色を適用
-          const presetColors: Record<string, string> = {
-            bedroom: '#FFF5F5',
-            living: '#F5F5FF',
-            cafe: '#FFF9F0',
-            park: '#F0FFF0',
-            beach: '#F0FFFF',
-            city: '#F5F5F5',
-            school: '#FFFAF0',
-            library: '#FAF5FF',
+          // プリセット背景画像のURLマッピング
+          const presetBackgrounds: Record<string, string> = {
+            bedroom: 'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=1920&h=1080&fit=crop',
+            living: 'https://images.unsplash.com/photo-1565183928294-7d21b36c9c24?w=1920&h=1080&fit=crop',
+            cafe: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1920&h=1080&fit=crop',
+            park: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=1920&h=1080&fit=crop',
+            beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&h=1080&fit=crop',
+            city: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1920&h=1080&fit=crop',
+            school: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1920&h=1080&fit=crop',
+            library: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1920&h=1080&fit=crop',
           };
-          const bgColor = presetColors[background.presetId || 'bedroom'] || '#FFF5F5';
-          scene.background = new THREE.Color(bgColor);
-          console.log('Applied preset background color:', bgColor);
+          
+          const bgUrl = presetBackgrounds[background.presetId || 'bedroom'];
+          if (bgUrl) {
+            textureLoader.load(
+              bgUrl,
+              (texture) => {
+                scene.background = texture;
+                console.log('Applied preset background image:', bgUrl);
+              },
+              undefined,
+              (error) => {
+                console.error('Failed to load background image:', error);
+                // フォールバックとして色を使用
+                scene.background = new THREE.Color('#FFF5F5');
+              }
+            );
+          }
         } else if (background && background.type === 'room' && background.roomConfig) {
           // ルームカスタマイズの場合
           scene.background = new THREE.Color(background.roomConfig.wallColor);
@@ -267,9 +284,19 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           floor.position.y = -1.5;
           scene.add(floor);
         } else {
-          // デフォルト背景（ピンク系の寝室風）
-          scene.background = new THREE.Color('#FFF5F5');
-          console.log('Applied default background color: #FFF5F5');
+          // デフォルト背景（寝室の画像）
+          textureLoader.load(
+            'https://images.unsplash.com/photo-1560185007-5f0bb1866cab?w=1920&h=1080&fit=crop',
+            (texture) => {
+              scene.background = texture;
+              console.log('Applied default background image');
+            },
+            undefined,
+            (error) => {
+              console.error('Failed to load default background image:', error);
+              scene.background = new THREE.Color('#FFF5F5');
+            }
+          );
         }
         
         sceneRef.current = scene;
@@ -373,27 +400,27 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             const leftLowerArm = vrm.humanoid.getNormalizedBoneNode('leftLowerArm');
             const rightLowerArm = vrm.humanoid.getNormalizedBoneNode('rightLowerArm');
             
-            // 腕を組む（初期ポーズ）
+            // 腕を前で組む（初期ポーズ）
             if (leftUpperArm) {
-              leftUpperArm.rotation.x = -Math.PI * 0.1;
-              leftUpperArm.rotation.y = Math.PI * 0.15;
-              leftUpperArm.rotation.z = -Math.PI * 0.15;
+              leftUpperArm.rotation.x = Math.PI * 0.2;  // 前に出す
+              leftUpperArm.rotation.y = Math.PI * 0.1;  // 内側に向ける
+              leftUpperArm.rotation.z = -Math.PI * 0.1; // わずかに下げる
             }
             if (rightUpperArm) {
-              rightUpperArm.rotation.x = -Math.PI * 0.1;
-              rightUpperArm.rotation.y = -Math.PI * 0.15;
-              rightUpperArm.rotation.z = Math.PI * 0.15;
+              rightUpperArm.rotation.x = Math.PI * 0.2;  // 前に出す
+              rightUpperArm.rotation.y = -Math.PI * 0.1; // 内側に向ける
+              rightUpperArm.rotation.z = Math.PI * 0.1;  // わずかに下げる
             }
             
-            // 肘を曲げて腕を組む
+            // 肘を曲げて前で腕を組む
             if (leftLowerArm) {
               leftLowerArm.rotation.x = 0;
-              leftLowerArm.rotation.y = Math.PI * 0.4;
+              leftLowerArm.rotation.y = Math.PI * 0.5;  // 肘を曲げて内側へ
               leftLowerArm.rotation.z = 0;
             }
             if (rightLowerArm) {
               rightLowerArm.rotation.x = 0;
-              rightLowerArm.rotation.y = -Math.PI * 0.4;
+              rightLowerArm.rotation.y = -Math.PI * 0.5; // 肘を曲げて内側へ
               rightLowerArm.rotation.z = 0;
             }
             
