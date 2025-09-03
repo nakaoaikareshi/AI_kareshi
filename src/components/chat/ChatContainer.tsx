@@ -430,7 +430,6 @@ export const ChatContainer: React.FC = () => {
         }}
         onEventMessage={handleEventMessage}
       />
-      </div>
     </div>
   );
 };
