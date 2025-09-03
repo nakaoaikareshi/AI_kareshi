@@ -130,13 +130,15 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
     }
   }, []);
 
-  // アイドルモーション（呼吸・揺れ）
+  // アイドルモーション（呼吸・揺れ・自然な動き）
   const setupIdleMotion = useCallback((vrm: VRM) => {
     if (!vrm || !vrm.humanoid) return;
 
-    // 初期ポーズの腕の角度を保存（修正された値）
-    const leftUpperArmBase = -Math.PI * 0.35;
-    const rightUpperArmBase = Math.PI * 0.35;
+    // 初期ポーズの腕の角度を保存
+    const leftUpperArmBase = -Math.PI * 0.4;
+    const rightUpperArmBase = Math.PI * 0.4;
+    const leftUpperArmXBase = Math.PI * 0.05;
+    const rightUpperArmXBase = Math.PI * 0.05;
 
     const animate = () => {
       if (!vrmRef.current || !clockRef.current) return;
@@ -144,28 +146,74 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       const deltaTime = clockRef.current.getDelta();
       const time = clockRef.current.getElapsedTime();
 
-      // 呼吸アニメーション
-      const breathAmount = Math.sin(time * 2) * 0.003;
+      // 呼吸アニメーション（胸部）
       const spine = vrmRef.current.humanoid.getNormalizedBoneNode('spine');
+      const upperChest = vrmRef.current.humanoid.getNormalizedBoneNode('upperChest');
       if (spine) {
-        spine.rotation.x = breathAmount;
+        spine.rotation.x = Math.PI * 0.01 + Math.sin(time * 1.2) * 0.005; // 呼吸による前後動
+        spine.rotation.y = Math.sin(time * 0.5) * 0.01; // ゆっくりとした左右の揺れ
+      }
+      if (upperChest) {
+        upperChest.rotation.x = Math.sin(time * 1.2 + Math.PI * 0.5) * 0.003;
       }
 
-      // 頭の微妙な動き
+      // 頭と首の自然な動き
+      const neck = vrmRef.current.humanoid.getNormalizedBoneNode('neck');
       const head = vrmRef.current.humanoid.getNormalizedBoneNode('head');
+      if (neck) {
+        neck.rotation.x = Math.PI * 0.01 + Math.sin(time * 1.5) * 0.015;
+        neck.rotation.y = Math.PI * 0.01 + Math.sin(time * 0.8) * 0.02;
+        neck.rotation.z = Math.sin(time * 1.1) * 0.005;
+      }
       if (head) {
-        head.rotation.x = Math.sin(time * 1.5) * 0.02;
-        head.rotation.y = Math.sin(time * 1.2) * 0.02;
+        head.rotation.x = Math.sin(time * 1.3 + Math.PI * 0.3) * 0.01;
+        head.rotation.y = Math.sin(time * 0.9 + Math.PI * 0.6) * 0.015;
       }
 
-      // 腕の自然な揺れ（初期ポーズを維持しながら）
+      // 腕の自然な揺れとリラックスした動き
       const leftUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
       const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
+      const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
+      const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
+      
       if (leftUpperArm) {
-        leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(time * 0.8) * 0.02;
+        leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(time * 0.7) * 0.03;
+        leftUpperArm.rotation.x = leftUpperArmXBase + Math.sin(time * 0.9) * 0.02;
+        leftUpperArm.rotation.y = Math.sin(time * 0.6) * 0.01;
       }
       if (rightUpperArm) {
-        rightUpperArm.rotation.z = rightUpperArmBase + Math.sin(time * 0.8 + Math.PI) * 0.02;
+        rightUpperArm.rotation.z = rightUpperArmBase + Math.sin(time * 0.7 + Math.PI) * 0.03;
+        rightUpperArm.rotation.x = rightUpperArmXBase + Math.sin(time * 0.9 + Math.PI) * 0.02;
+        rightUpperArm.rotation.y = Math.sin(time * 0.6 + Math.PI) * 0.01;
+      }
+      if (leftLowerArm) {
+        leftLowerArm.rotation.y = Math.PI * 0.05 + Math.sin(time * 1.1) * 0.02;
+        leftLowerArm.rotation.z = -Math.PI * 0.02 + Math.sin(time * 0.8) * 0.01;
+      }
+      if (rightLowerArm) {
+        rightLowerArm.rotation.y = -Math.PI * 0.05 + Math.sin(time * 1.1 + Math.PI) * 0.02;
+        rightLowerArm.rotation.z = Math.PI * 0.02 + Math.sin(time * 0.8 + Math.PI) * 0.01;
+      }
+
+      // 手の細かな動き
+      const leftHand = vrmRef.current.humanoid.getNormalizedBoneNode('leftHand');
+      const rightHand = vrmRef.current.humanoid.getNormalizedBoneNode('rightHand');
+      if (leftHand) {
+        leftHand.rotation.x = Math.PI * 0.03 + Math.sin(time * 1.5) * 0.01;
+        leftHand.rotation.z = -Math.PI * 0.02 + Math.sin(time * 2) * 0.005;
+      }
+      if (rightHand) {
+        rightHand.rotation.x = Math.PI * 0.03 + Math.sin(time * 1.5 + Math.PI) * 0.01;
+        rightHand.rotation.z = Math.PI * 0.02 + Math.sin(time * 2 + Math.PI) * 0.005;
+      }
+
+      // 重心の移動（腰の動き）
+      const hips = vrmRef.current.humanoid.getNormalizedBoneNode('hips');
+      if (hips) {
+        hips.rotation.x = -Math.PI * 0.01 + Math.sin(time * 0.4) * 0.003;
+        hips.rotation.y = Math.sin(time * 0.3) * 0.005;
+        hips.position.x = Math.sin(time * 0.3) * 0.01; // わずかな左右の重心移動
+        hips.position.y = Math.sin(time * 0.6) * 0.005; // わずかな上下動
       }
 
       // VRMの更新
@@ -255,39 +303,58 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
-            // 腕を下ろす（VRMの座標系に合わせて調整）
+            // より自然な腕のポジション
             const leftUpperArm = vrm.humanoid.getNormalizedBoneNode('leftUpperArm');
             const rightUpperArm = vrm.humanoid.getNormalizedBoneNode('rightUpperArm');
             const leftLowerArm = vrm.humanoid.getNormalizedBoneNode('leftLowerArm');
             const rightLowerArm = vrm.humanoid.getNormalizedBoneNode('rightLowerArm');
             
+            // 腕を自然に体の横に下ろす
             if (leftUpperArm) {
-              leftUpperArm.rotation.z = -Math.PI * 0.35; // 腕を下げる（約63度）
+              leftUpperArm.rotation.z = -Math.PI * 0.4; // 72度下げる
+              leftUpperArm.rotation.x = Math.PI * 0.05; // 少し前に
             }
             if (rightUpperArm) {
-              rightUpperArm.rotation.z = Math.PI * 0.35; // 腕を下げる（約63度）
-            }
-            if (leftLowerArm) {
-              leftLowerArm.rotation.y = Math.PI * 0.1; // 肘を少し曲げる
-            }
-            if (rightLowerArm) {
-              rightLowerArm.rotation.y = -Math.PI * 0.1; // 肘を少し曲げる
+              rightUpperArm.rotation.z = Math.PI * 0.4; // 72度下げる
+              rightUpperArm.rotation.x = Math.PI * 0.05; // 少し前に
             }
             
-            // 手首をリラックスさせる
+            // 肘を自然に曲げる
+            if (leftLowerArm) {
+              leftLowerArm.rotation.y = Math.PI * 0.05; // わずかに曲げる
+              leftLowerArm.rotation.z = -Math.PI * 0.02;
+            }
+            if (rightLowerArm) {
+              rightLowerArm.rotation.y = -Math.PI * 0.05; // わずかに曲げる
+              rightLowerArm.rotation.z = Math.PI * 0.02;
+            }
+            
+            // 手をリラックスさせる
             const leftHand = vrm.humanoid.getNormalizedBoneNode('leftHand');
             const rightHand = vrm.humanoid.getNormalizedBoneNode('rightHand');
             if (leftHand) {
-              leftHand.rotation.x = Math.PI * 0.05; // 手首を少し曲げる
+              leftHand.rotation.x = Math.PI * 0.03;
+              leftHand.rotation.z = -Math.PI * 0.02;
             }
             if (rightHand) {
-              rightHand.rotation.x = Math.PI * 0.05; // 手首を少し曲げる
+              rightHand.rotation.x = Math.PI * 0.03;
+              rightHand.rotation.z = Math.PI * 0.02;
             }
             
-            // 首を少し傾ける（自然な感じに）
+            // 体全体の自然なポーズ
+            const spine = vrm.humanoid.getNormalizedBoneNode('spine');
+            const hips = vrm.humanoid.getNormalizedBoneNode('hips');
             const neck = vrm.humanoid.getNormalizedBoneNode('neck');
+            
+            if (spine) {
+              spine.rotation.x = Math.PI * 0.01; // わずかに前傾
+            }
+            if (hips) {
+              hips.rotation.x = -Math.PI * 0.01; // 腰をわずかに引く
+            }
             if (neck) {
-              neck.rotation.x = Math.PI * 0.02; // 少し下を向く
+              neck.rotation.x = Math.PI * 0.01; // 自然な首の角度
+              neck.rotation.y = Math.PI * 0.01; // わずかに横を向く
             }
           }
 
