@@ -219,8 +219,8 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         const loader = new GLTFLoader();
         loader.register((parser) => new VRMLoaderPlugin(parser));
 
-        // VRMモデルのURL（デフォルトまたはカスタム）
-        const modelUrl = avatar.vrmUrl || '/models/vrm/default.vrm';
+        // VRMモデルのURL（あなたが作成したキャラクターを使用）
+        const modelUrl = avatar.vrmUrl || '/models/vrm/character.vrm';
 
         try {
           const gltf = await loader.loadAsync(modelUrl);
