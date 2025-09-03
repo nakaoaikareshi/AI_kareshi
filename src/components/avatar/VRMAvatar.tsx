@@ -130,7 +130,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
     }
   }, []);
 
-  // アイドルモーション（呼吸・揺れ・自然な動き）
+  // アイドルモーション（呼吸・揺れ・身振り手振り）
   const setupIdleMotion = useCallback((vrm: VRM) => {
     if (!vrm || !vrm.humanoid) return;
 
@@ -170,29 +170,76 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         head.rotation.y = Math.sin(time * 0.9 + Math.PI * 0.6) * 0.015;
       }
 
-      // 腕の自然な揺れとリラックスした動き
+      // 身振り手振りアニメーション（腕の表現豊かな動き）
+      const gestureTime = time * 0.3; // ゆっくりとした身振り
+      const gestureIntensity = Math.sin(gestureTime) * 0.5 + 0.5; // 0から1の強度
+      
       const leftUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
       const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
       const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
       const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
       
-      if (leftUpperArm) {
-        leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(time * 0.7) * 0.03;
-        leftUpperArm.rotation.x = leftUpperArmXBase + Math.sin(time * 0.9) * 0.02;
-        leftUpperArm.rotation.y = Math.sin(time * 0.6) * 0.01;
+      // 身振り手振りのパターン
+      const gesturePattern = Math.floor(time / 8) % 3; // 8秒ごとに切り替わる3つのパターン
+      
+      if (gesturePattern === 0) {
+        // パターン1: 説明するような動き（両手を広げる）
+        if (leftUpperArm) {
+          leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(gestureTime * 2) * 0.3 * gestureIntensity;
+          leftUpperArm.rotation.x = leftUpperArmXBase + Math.sin(gestureTime * 2.5) * 0.2;
+          leftUpperArm.rotation.y = Math.sin(gestureTime * 1.8) * 0.15;
+        }
+        if (rightUpperArm) {
+          rightUpperArm.rotation.z = rightUpperArmBase - Math.sin(gestureTime * 2) * 0.3 * gestureIntensity;
+          rightUpperArm.rotation.x = rightUpperArmXBase + Math.sin(gestureTime * 2.5 + Math.PI) * 0.2;
+          rightUpperArm.rotation.y = -Math.sin(gestureTime * 1.8) * 0.15;
+        }
+      } else if (gesturePattern === 1) {
+        // パターン2: 手を振るような動き
+        if (rightUpperArm) {
+          rightUpperArm.rotation.z = rightUpperArmBase + 0.3;
+          rightUpperArm.rotation.x = -0.2;
+          rightUpperArm.rotation.y = Math.sin(gestureTime * 3) * 0.3;
+        }
+        if (rightLowerArm) {
+          rightLowerArm.rotation.x = -0.4;
+          rightLowerArm.rotation.z = Math.sin(gestureTime * 4) * 0.2;
+        }
+        // 左手は自然に
+        if (leftUpperArm) {
+          leftUpperArm.rotation.z = leftUpperArmBase + Math.sin(time * 0.7) * 0.03;
+          leftUpperArm.rotation.x = leftUpperArmXBase + Math.sin(time * 0.9) * 0.02;
+        }
+      } else {
+        // パターン3: 考えるような仕草（腕を組む風）
+        if (leftUpperArm) {
+          leftUpperArm.rotation.z = -Math.PI * 0.35;
+          leftUpperArm.rotation.x = Math.PI * 0.2;
+          leftUpperArm.rotation.y = Math.PI * 0.1;
+        }
+        if (rightUpperArm) {
+          rightUpperArm.rotation.z = Math.PI * 0.35;
+          rightUpperArm.rotation.x = Math.PI * 0.2;
+          rightUpperArm.rotation.y = -Math.PI * 0.1;
+        }
+        if (leftLowerArm) {
+          leftLowerArm.rotation.y = Math.PI * 0.4;
+        }
+        if (rightLowerArm) {
+          rightLowerArm.rotation.y = -Math.PI * 0.4;
+        }
       }
-      if (rightUpperArm) {
-        rightUpperArm.rotation.z = rightUpperArmBase + Math.sin(time * 0.7 + Math.PI) * 0.03;
-        rightUpperArm.rotation.x = rightUpperArmXBase + Math.sin(time * 0.9 + Math.PI) * 0.02;
-        rightUpperArm.rotation.y = Math.sin(time * 0.6 + Math.PI) * 0.01;
-      }
-      if (leftLowerArm) {
-        leftLowerArm.rotation.y = Math.PI * 0.05 + Math.sin(time * 1.1) * 0.02;
-        leftLowerArm.rotation.z = -Math.PI * 0.02 + Math.sin(time * 0.8) * 0.01;
-      }
-      if (rightLowerArm) {
-        rightLowerArm.rotation.y = -Math.PI * 0.05 + Math.sin(time * 1.1 + Math.PI) * 0.02;
-        rightLowerArm.rotation.z = Math.PI * 0.02 + Math.sin(time * 0.8 + Math.PI) * 0.01;
+      
+      // 基本の腕の動き（パターン0と2の時）
+      if (gesturePattern !== 1) {
+        if (leftLowerArm && gesturePattern === 0) {
+          leftLowerArm.rotation.y = Math.PI * 0.05 + Math.sin(gestureTime * 2.2) * 0.1;
+          leftLowerArm.rotation.z = -Math.PI * 0.02 + Math.sin(gestureTime * 1.5) * 0.05;
+        }
+        if (rightLowerArm && gesturePattern === 0) {
+          rightLowerArm.rotation.y = -Math.PI * 0.05 - Math.sin(gestureTime * 2.2) * 0.1;
+          rightLowerArm.rotation.z = Math.PI * 0.02 - Math.sin(gestureTime * 1.5) * 0.05;
+        }
       }
 
       // 手の細かな動き
@@ -245,12 +292,12 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          75,  // 視野角を広げて全身を収める
+          70,  // 視野角を調整して全身を収める
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 1.0, 1.5);  // カメラを近づけて全体を映す
+        camera.position.set(0, 0.9, 1.8);  // カメラを真正面（目の高さ）に配置
         cameraRef.current = camera;
 
         // レンダラー
@@ -269,7 +316,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.5, 0);  // 体の中心を見る
+        controls.target.set(0, 0.9, 0);  // 胸のあたりを見る（真正面）
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
@@ -299,7 +346,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           vrmRef.current = vrm;
 
           // モデルの位置を調整（中央に配置、全身表示）
-          vrm.scene.position.set(0, -1.0, 0);  // モデルを下げて足まで表示
+          vrm.scene.position.set(0, -0.3, 0);  // モデルを上げて画面中央に配置
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -365,11 +412,11 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             const hipsWorldPosition = new THREE.Vector3();
             hips.getWorldPosition(hipsWorldPosition);
             
-            // 腰より少し下を見ることで全身を表示
-            controls.target.set(0, hipsWorldPosition.y - 0.3, 0);
+            // 腰の高さを基準に真正面から見る
+            controls.target.set(0, hipsWorldPosition.y, 0);
             
-            // カメラ位置を調整
-            camera.position.set(0, hipsWorldPosition.y + 0.2, 1.5);
+            // カメラを腰の高さに合わせて真正面に配置
+            camera.position.set(0, hipsWorldPosition.y, 1.8);
             controls.update();
           }
 
