@@ -132,7 +132,7 @@ export class SpeechSynthesisManager {
     }
   }
 
-  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: Record<string, number> }, options: {
+  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: any }, options: {
     onStart?: () => void;
     onEnd?: () => void;
     onError?: (error: SpeechSynthesisErrorEvent) => void;
