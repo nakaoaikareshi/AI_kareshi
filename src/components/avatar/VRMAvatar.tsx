@@ -134,9 +134,9 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
   const setupIdleMotion = useCallback((vrm: VRM) => {
     if (!vrm || !vrm.humanoid) return;
 
-    // 初期ポーズの腕の角度を保存
-    const leftUpperArmBase = Math.PI * 0.25;
-    const rightUpperArmBase = -Math.PI * 0.25;
+    // 初期ポーズの腕の角度を保存（修正された値）
+    const leftUpperArmBase = -Math.PI * 0.35;
+    const rightUpperArmBase = Math.PI * 0.35;
 
     const animate = () => {
       if (!vrmRef.current || !clockRef.current) return;
@@ -255,33 +255,33 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
-            // 腕を下ろす
+            // 腕を下ろす（VRMの座標系に合わせて調整）
             const leftUpperArm = vrm.humanoid.getNormalizedBoneNode('leftUpperArm');
             const rightUpperArm = vrm.humanoid.getNormalizedBoneNode('rightUpperArm');
             const leftLowerArm = vrm.humanoid.getNormalizedBoneNode('leftLowerArm');
             const rightLowerArm = vrm.humanoid.getNormalizedBoneNode('rightLowerArm');
             
             if (leftUpperArm) {
-              leftUpperArm.rotation.z = Math.PI * 0.25; // 45度下げる
+              leftUpperArm.rotation.z = -Math.PI * 0.35; // 腕を下げる（約63度）
             }
             if (rightUpperArm) {
-              rightUpperArm.rotation.z = -Math.PI * 0.25; // 45度下げる
+              rightUpperArm.rotation.z = Math.PI * 0.35; // 腕を下げる（約63度）
             }
             if (leftLowerArm) {
-              leftLowerArm.rotation.z = Math.PI * 0.05; // わずかに曲げる
+              leftLowerArm.rotation.y = Math.PI * 0.1; // 肘を少し曲げる
             }
             if (rightLowerArm) {
-              rightLowerArm.rotation.z = -Math.PI * 0.05; // わずかに曲げる
+              rightLowerArm.rotation.y = -Math.PI * 0.1; // 肘を少し曲げる
             }
             
             // 手首をリラックスさせる
             const leftHand = vrm.humanoid.getNormalizedBoneNode('leftHand');
             const rightHand = vrm.humanoid.getNormalizedBoneNode('rightHand');
             if (leftHand) {
-              leftHand.rotation.z = Math.PI * 0.02;
+              leftHand.rotation.x = Math.PI * 0.05; // 手首を少し曲げる
             }
             if (rightHand) {
-              rightHand.rotation.z = -Math.PI * 0.02;
+              rightHand.rotation.x = Math.PI * 0.05; // 手首を少し曲げる
             }
             
             // 首を少し傾ける（自然な感じに）
