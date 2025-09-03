@@ -161,79 +161,32 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
         head.rotation.y = Math.sin(time * 0.3 + Math.PI * 0.3) * 0.03;
       }
 
-      // 腕のポーズ（15秒ごとに変更）
-      const posePattern = Math.floor(time / 15) % 3;
+      // 腕を組む（常時）
       const leftUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
       const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
       const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
       const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
       
-      if (posePattern === 0) {
-        // 腕を自然に下ろす
-        if (leftUpperArm) {
-          leftUpperArm.rotation.x = 0;
-          leftUpperArm.rotation.y = 0;
-          leftUpperArm.rotation.z = -Math.PI * 0.2;
-        }
-        if (rightUpperArm) {
-          rightUpperArm.rotation.x = 0;
-          rightUpperArm.rotation.y = 0;
-          rightUpperArm.rotation.z = Math.PI * 0.2;
-        }
-        if (leftLowerArm) {
-          leftLowerArm.rotation.x = 0;
-          leftLowerArm.rotation.y = 0;
-          leftLowerArm.rotation.z = 0;
-        }
-        if (rightLowerArm) {
-          rightLowerArm.rotation.x = 0;
-          rightLowerArm.rotation.y = 0;
-          rightLowerArm.rotation.z = 0;
-        }
-      } else if (posePattern === 1) {
-        // 腕を組む
-        if (leftUpperArm) {
-          leftUpperArm.rotation.x = -Math.PI * 0.1;
-          leftUpperArm.rotation.y = Math.PI * 0.15;
-          leftUpperArm.rotation.z = -Math.PI * 0.15;
-        }
-        if (rightUpperArm) {
-          rightUpperArm.rotation.x = -Math.PI * 0.1;
-          rightUpperArm.rotation.y = -Math.PI * 0.15;
-          rightUpperArm.rotation.z = Math.PI * 0.15;
-        }
-        if (leftLowerArm) {
-          leftLowerArm.rotation.x = 0;
-          leftLowerArm.rotation.y = Math.PI * 0.4;
-          leftLowerArm.rotation.z = 0;
-        }
-        if (rightLowerArm) {
-          rightLowerArm.rotation.x = 0;
-          rightLowerArm.rotation.y = -Math.PI * 0.4;
-          rightLowerArm.rotation.z = 0;
-        }
-      } else {
-        // 片手を腰に
-        if (leftUpperArm) {
-          leftUpperArm.rotation.x = -Math.PI * 0.05;
-          leftUpperArm.rotation.y = Math.PI * 0.1;
-          leftUpperArm.rotation.z = -Math.PI * 0.3;
-        }
-        if (rightUpperArm) {
-          rightUpperArm.rotation.x = 0;
-          rightUpperArm.rotation.y = 0;
-          rightUpperArm.rotation.z = Math.PI * 0.2;
-        }
-        if (leftLowerArm) {
-          leftLowerArm.rotation.x = 0;
-          leftLowerArm.rotation.y = Math.PI * 0.3;
-          leftLowerArm.rotation.z = 0;
-        }
-        if (rightLowerArm) {
-          rightLowerArm.rotation.x = 0;
-          rightLowerArm.rotation.y = 0;
-          rightLowerArm.rotation.z = 0;
-        }
+      // 腕を組む
+      if (leftUpperArm) {
+        leftUpperArm.rotation.x = -Math.PI * 0.1;
+        leftUpperArm.rotation.y = Math.PI * 0.15;
+        leftUpperArm.rotation.z = -Math.PI * 0.15;
+      }
+      if (rightUpperArm) {
+        rightUpperArm.rotation.x = -Math.PI * 0.1;
+        rightUpperArm.rotation.y = -Math.PI * 0.15;
+        rightUpperArm.rotation.z = Math.PI * 0.15;
+      }
+      if (leftLowerArm) {
+        leftLowerArm.rotation.x = 0;
+        leftLowerArm.rotation.y = Math.PI * 0.4;
+        leftLowerArm.rotation.z = 0;
+      }
+      if (rightLowerArm) {
+        rightLowerArm.rotation.x = 0;
+        rightLowerArm.rotation.y = -Math.PI * 0.4;
+        rightLowerArm.rotation.z = 0;
       }
 
       // 重心移動（立ち姿勢を変える）
@@ -291,7 +244,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           0.1,
           1000
         );
-        camera.position.set(0, 1.0, 2.8);  // カメラを真正面に配置、距離を調整
+        camera.position.set(0, 1.5, 2.8);  // カメラを高い位置に配置
         cameraRef.current = camera;
 
         // レンダラー
@@ -310,7 +263,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 1.0, 0);  // モデルの中心（腰のあたり）を見る
+        controls.target.set(0, 1.5, 0);  // カメラターゲットも高く設定
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
@@ -339,8 +292,8 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
-          // モデルの位置を調整（足元まで表示）
-          vrm.scene.position.set(0, 0.2, 0);  // モデルを少し上に配置して全身表示
+          // モデルの位置を調整（頭が画面上部に来るように）
+          vrm.scene.position.set(0, 1.0, 0);  // モデルを大きく上に配置
 
           // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
           if (vrm.humanoid) {
@@ -350,27 +303,27 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             const leftLowerArm = vrm.humanoid.getNormalizedBoneNode('leftLowerArm');
             const rightLowerArm = vrm.humanoid.getNormalizedBoneNode('rightLowerArm');
             
-            // 腕を自然に下ろす（初期ポーズ）
+            // 腕を組む（初期ポーズ）
             if (leftUpperArm) {
-              leftUpperArm.rotation.x = 0;
-              leftUpperArm.rotation.y = 0;
-              leftUpperArm.rotation.z = -Math.PI * 0.2; // 自然に下ろす
+              leftUpperArm.rotation.x = -Math.PI * 0.1;
+              leftUpperArm.rotation.y = Math.PI * 0.15;
+              leftUpperArm.rotation.z = -Math.PI * 0.15;
             }
             if (rightUpperArm) {
-              rightUpperArm.rotation.x = 0;
-              rightUpperArm.rotation.y = 0;
-              rightUpperArm.rotation.z = Math.PI * 0.2; // 自然に下ろす
+              rightUpperArm.rotation.x = -Math.PI * 0.1;
+              rightUpperArm.rotation.y = -Math.PI * 0.15;
+              rightUpperArm.rotation.z = Math.PI * 0.15;
             }
             
-            // 肘はまっすぐ
+            // 肘を曲げて腕を組む
             if (leftLowerArm) {
               leftLowerArm.rotation.x = 0;
-              leftLowerArm.rotation.y = 0;
+              leftLowerArm.rotation.y = Math.PI * 0.4;
               leftLowerArm.rotation.z = 0;
             }
             if (rightLowerArm) {
               rightLowerArm.rotation.x = 0;
-              rightLowerArm.rotation.y = 0;
+              rightLowerArm.rotation.y = -Math.PI * 0.4;
               rightLowerArm.rotation.z = 0;
             }
             
@@ -396,24 +349,18 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
             }
           }
 
-          // カメラのターゲットを全身が見えるように設定
-          const hips = vrm.humanoid?.getNormalizedBoneNode('hips');
+          // カメラのターゲットを全身が見えるように設定（頭が画面上部に）
           const head = vrm.humanoid?.getNormalizedBoneNode('head');
-          if (hips && head) {
-            // 腰と頭の位置を取得
-            const hipsWorldPosition = new THREE.Vector3();
+          if (head) {
+            // 頭の位置を取得
             const headWorldPosition = new THREE.Vector3();
-            hips.getWorldPosition(hipsWorldPosition);
             head.getWorldPosition(headWorldPosition);
             
-            // モデルの中心点（腰と頭の中間）を計算
-            const centerY = (hipsWorldPosition.y + headWorldPosition.y) / 2;
+            // カメラのターゲットを胸のあたりに設定（頭が画面上部に来るように）
+            controls.target.set(0, headWorldPosition.y - 0.3, 0);
             
-            // カメラのターゲットをモデルの中心に設定
-            controls.target.set(0, centerY, 0);
-            
-            // カメラを目の高さに配置、全身が入る距離に調整
-            camera.position.set(0, centerY, 2.8);
+            // カメラを頭の高さに配置
+            camera.position.set(0, headWorldPosition.y - 0.3, 2.8);
             controls.update();
           }
 
