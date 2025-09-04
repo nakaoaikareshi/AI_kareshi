@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import { Settings, ShoppingBag, Heart, Gift, Video, Image } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { useCharacterStore } from '@/store/characterStore';
@@ -21,7 +21,7 @@ import { BackgroundModal } from '@/components/background/BackgroundModal';
 import { speechSynthesis } from '@/utils/speechSynthesis';
 import { analyzeEmotionIntensity, inferEmotionFromContext, smoothEmotionTransition, EmotionType } from '@/utils/emotionAnalyzer';
 
-export const ChatContainer: React.FC = () => {
+const ChatContainerComponent: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { messages, isLoading, addMessage, setLoading, markMessagesAsRead } = useChatStore();
   const { character } = useCharacterStore();
@@ -39,9 +39,9 @@ export const ChatContainer: React.FC = () => {
   const [currentEmotion, setCurrentEmotion] = useState<EmotionType>('normal');
   const [emotionIntensity, setEmotionIntensity] = useState(50);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -130,7 +130,7 @@ export const ChatContainer: React.FC = () => {
     }
   }, [messages, markMessagesAsRead]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = useCallback(async (content: string) => {
     if (!character) return;
 
     // Add user message
@@ -187,9 +187,9 @@ export const ChatContainer: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [character, messages, addMessage, setLoading, user]);
 
-  const handleGiftSent = (giftMessage: string) => {
+  const handleGiftSent = useCallback((giftMessage: string) => {
     addMessage({
       senderId: 'user',
       content: giftMessage,
@@ -208,9 +208,9 @@ export const ChatContainer: React.FC = () => {
         isUser: false,
       });
     }, 1000);
-  };
+  }, [character, addMessage]);
 
-  const handleEventMessage = (eventMessage: string) => {
+  const handleEventMessage = useCallback((eventMessage: string) => {
     // キャラクターからの日常イベントメッセージを追加
     addMessage({
       senderId: character!.id,
@@ -219,7 +219,14 @@ export const ChatContainer: React.FC = () => {
       isRead: false,
       isUser: false,
     });
-  };
+  }, [character, addMessage]);
+
+  // Memoize the messages rendering for better performance
+  const renderedMessages = useMemo(() => (
+    messages.map((message) => (
+      <ChatMessage key={message.id} message={message} />
+    ))
+  ), [messages]);
 
   if (!character) {
     return (
@@ -393,9 +400,7 @@ export const ChatContainer: React.FC = () => {
             <p>{character.nickname}との会話を始めましょう！</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))
+          renderedMessages
         )}
         
         {isLoading && <TypingIndicator />}
@@ -455,3 +460,6 @@ export const ChatContainer: React.FC = () => {
     </div>
   );
 };
+
+// Export with React.memo for performance optimization
+export const ChatContainer = memo(ChatContainerComponent);

@@ -6,6 +6,7 @@ import { DailyEventGenerator } from '@/utils/dailyEvents';
 import { RefusalSystem } from '@/utils/refusalSystem';
 import { validateInput, chatMessageSchema, sanitizeString } from '@/utils/validation';
 import { logger, createRequestContext, createSuccessResponse, createErrorResponse } from '@/lib/logger';
+import { env } from '@/lib/env';
 
 // Rate limiting setup
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -34,7 +35,7 @@ function isRateLimited(key: string): boolean {
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: env.OPENAI_API_KEY,
 });
 
 function generateSystemPrompt(character: Character, userName?: string, currentMood?: number): string {
