@@ -15,7 +15,22 @@ import { MemoryAlbum } from '@/components/memories/MemoryAlbum';
 import { ScheduleModal } from '@/components/schedule/ScheduleModal';
 import { MoodIndicator } from './MoodIndicator';
 import { DailyEventNotification } from './DailyEventNotification';
-import { VRMAvatar } from '@/components/avatar/VRMAvatar';
+// 遅延読み込みでVRMアバターをインポート
+import dynamic from 'next/dynamic';
+
+const VRMAvatar = dynamic(
+  () => import('@/components/avatar/VRMAvatarOptimized').then(mod => ({ 
+    default: mod.VRMAvatarOptimized 
+  })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+);
 import { VideoCallModal } from '@/components/video/VideoCallModal';
 import { BackgroundModal } from '@/components/background/BackgroundModal';
 import { speechSynthesis } from '@/utils/speechSynthesis';
