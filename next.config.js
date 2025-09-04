@@ -6,22 +6,21 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': ['@svgr/webpack'],
-      },
+  turbopack: {
+    rules: {
+      '*.svg': ['@svgr/webpack'],
     },
-    optimizeCss: true,
-    optimizePackageImports: [
-      'lucide-react',
-      '@pixiv/three-vrm',
-      'three',
-      'openai',
-      'zod',
-    ],
   },
+  experimental: {
+    optimizeCss: true,
+  },
+  optimizePackageImports: [
+    'lucide-react',
+    '@pixiv/three-vrm',
+    'three',
+    'openai',
+    'zod',
+  ],
   async headers() {
     return [
       {

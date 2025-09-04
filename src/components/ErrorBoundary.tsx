@@ -2,6 +2,7 @@
  * エラーバウンダリコンポーネント
  * Reactコンポーネント内のエラーをキャッチして処理
  */
+'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { reportError } from '@/lib/errorHandler';
