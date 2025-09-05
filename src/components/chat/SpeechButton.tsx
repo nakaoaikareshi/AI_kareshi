@@ -34,7 +34,13 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({ text }) => {
       if (character) {
         speechSynthesis.speakWithPersonality(text, {
           gender: character.gender,
-          personality: character.personality as unknown as Record<string, number>
+          personality: {
+            kindness: character.personality.kindness,
+            humor: character.personality.humor,
+            seriousness: character.personality.seriousness,
+            activeness: character.personality.activeness,
+            empathy: character.personality.empathy
+          } as Record<string, number>
         }, {
           onStart: () => {
             setIsPlaying(true);
