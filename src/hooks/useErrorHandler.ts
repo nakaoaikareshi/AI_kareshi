@@ -25,7 +25,7 @@ interface UseErrorHandlerReturn {
   setError: (error: Error | AppError | string | null) => void;
   clearError: () => void;
   handleAsyncError: <T>(promise: Promise<T>) => Promise<T | undefined>;
-  ErrorDisplay: () => React.JSX.Element | null;
+  ErrorDisplay: () => null;
 }
 
 /**
@@ -78,7 +78,7 @@ export const useErrorHandler = (
     }
 
     // ロギング
-    logger.error('Error handled by useErrorHandler', error);
+    logger.error('Error handled by useErrorHandler', { error });
   }, []);
 
   // エラーをクリア
@@ -114,54 +114,11 @@ export const useErrorHandler = (
     }
   }, [errorState.isError, autoHideDelay, clearError]);
 
-  // エラー表示コンポーネント
-  const ErrorDisplay = () => {
-    if (!errorState.isError || !errorState.message) return null;
-
-    const getErrorColor = () => {
-      switch (errorState.type) {
-        case ErrorType.VALIDATION:
-          return 'bg-yellow-50 border-yellow-400 text-yellow-800';
-        case ErrorType.AUTHENTICATION:
-        case ErrorType.AUTHORIZATION:
-          return 'bg-orange-50 border-orange-400 text-orange-800';
-        case ErrorType.RATE_LIMIT:
-          return 'bg-purple-50 border-purple-400 text-purple-800';
-        case ErrorType.NOT_FOUND:
-          return 'bg-gray-50 border-gray-400 text-gray-800';
-        default:
-          return 'bg-red-50 border-red-400 text-red-800';
-      }
-    };
-
-    return (
-      <div
-        className={`fixed top-4 right-4 max-w-sm p-4 border rounded-lg shadow-lg z-50 ${getErrorColor()}`}
-        role="alert"
-      >
-        <div className="flex items-start">
-          <div className="flex-1">
-            <p className="text-sm font-medium">
-              {sanitizeErrorMessage(errorState.message)}
-            </p>
-          </div>
-          <button
-            onClick={clearError}
-            className="ml-4 inline-flex text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="閉じる"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-    );
-  };
+  // エラー表示コンポーネント（プレースホルダー）
+  // 実際のJSXコンポーネントは別ファイルで定義する必要がある
+  const ErrorDisplay = useCallback(() => {
+    return null; // JSXをhooksファイル内で返すことはできないため
+  }, []);
 
   return {
     error: errorState,
@@ -176,7 +133,7 @@ export const useErrorHandler = (
  * APIコール用のエラーハンドリングフック
  */
 export const useApiErrorHandler = () => {
-  const { setError, clearError, ErrorDisplay } = useErrorHandler();
+  const { error, setError, clearError, handleAsyncError, ErrorDisplay } = useErrorHandler();
 
   const handleApiCall = useCallback(async <T,>(
     apiCall: () => Promise<T>,

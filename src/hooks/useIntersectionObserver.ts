@@ -18,7 +18,7 @@ export const useIntersectionObserver = ({
   rootMargin = '0%',
   freezeOnceVisible = false,
 }: UseIntersectionObserverProps = {}) => {
-  const [entry, setEntry] = useState<IntersectionObserverEntry>();
+  const [entry, setEntry] = useState<IntersectionObserverEntry | undefined>();
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<Element>();
   const frozen = useRef(false);
