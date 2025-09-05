@@ -136,10 +136,16 @@ class Logger {
   private writeLog(entry: LogEntry): void {
     const formatted = this.formatLogEntry(entry);
     
-    if (entry.level >= LogLevel.ERROR) {
+    // Only output to console in development mode
+    if (this.isDevelopment) {
+      if (entry.level >= LogLevel.ERROR) {
+        console.error(formatted);
+      } else {
+        console.log(formatted);
+      }
+    } else if (entry.level >= LogLevel.ERROR) {
+      // In production, only log errors to avoid noise
       console.error(formatted);
-    } else {
-      console.log(formatted);
     }
   }
 

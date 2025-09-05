@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, MessageCircle } from 'lucide-react';
 import { DailyEvent } from '@/types';
-import { DailyEventGenerator } from '@/utils/dailyEvents';
+import { generateDailyEvent, shouldTriggerEvent, generateEventMessage } from '@/utils/eventGenerator';
+import { useEventStore } from '@/store/eventStore';
 
 interface DailyEventNotificationProps {
   character: {
@@ -18,29 +19,61 @@ export const DailyEventNotification: React.FC<DailyEventNotificationProps> = ({
 }) => {
   const [pendingEvent, setPendingEvent] = useState<DailyEvent | null>(null);
   const [showNotification, setShowNotification] = useState(false);
+  const { 
+    events, 
+    lastEventTime, 
+    eventEnabled, 
+    eventFrequency,
+    addEvent, 
+    getRecentEvents 
+  } = useEventStore();
 
   const checkForDailyEvent = useCallback(() => {
-    const event = DailyEventGenerator.generateDailyEvent(character.occupation);
+    if (!eventEnabled) return;
     
-    if (event && DailyEventGenerator.shouldShareEvent()) {
-      setPendingEvent(event);
-      setShowNotification(true);
+    // イベントをトリガーするか判定
+    if (shouldTriggerEvent(lastEventTime || undefined)) {
+      const recentEvents = getRecentEvents();
+      const event = generateDailyEvent(character.occupation, recentEvents);
+      
+      if (event) {
+        setPendingEvent(event);
+        setShowNotification(true);
+      }
     }
-  }, [character.occupation]);
+  }, [character.occupation, eventEnabled, lastEventTime, getRecentEvents]);
 
   useEffect(() => {
-    // 10秒後にランダムで日常イベントをチェック
-    const timer = setTimeout(() => {
+    // イベント頻度に応じた間隔でチェック
+    const intervals = {
+      low: 600000,   // 10分
+      medium: 300000, // 5分
+      high: 120000    // 2分
+    };
+    
+    const checkInterval = intervals[eventFrequency];
+    
+    // 初回チェックは10秒後
+    const initialTimer = setTimeout(() => {
       checkForDailyEvent();
     }, 10000);
+    
+    // その後は定期的にチェック
+    const intervalTimer = setInterval(() => {
+      checkForDailyEvent();
+    }, checkInterval);
 
-    return () => clearTimeout(timer);
-  }, [checkForDailyEvent]);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(intervalTimer);
+    };
+  }, [checkForDailyEvent, eventFrequency]);
 
   const handleSendEvent = () => {
     if (pendingEvent) {
-      const eventMessage = DailyEventGenerator.createEventMessage(pendingEvent, character.nickname);
+      const eventMessage = generateEventMessage(pendingEvent, character.nickname);
       onEventMessage(eventMessage);
+      addEvent(pendingEvent); // イベントを履歴に追加
       setShowNotification(false);
       setPendingEvent(null);
     }

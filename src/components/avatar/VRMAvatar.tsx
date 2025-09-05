@@ -6,14 +6,17 @@ import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { AvatarSettings } from '@/types';
+import { useBackgroundStore } from '@/store/backgroundStore';
+import { EmotionType } from '@/utils/emotionAnalyzer';
 
 interface VRMAvatarProps {
   avatar: AvatarSettings;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
   mood?: number;
   isSpeaking?: boolean;
   isBlinking?: boolean;
-  emotionState?: 'normal' | 'happy' | 'sad' | 'angry' | 'surprised' | 'love';
+  emotionState?: EmotionType;
+  emotionIntensity?: number;
 }
 
 export const VRMAvatar: React.FC<VRMAvatarProps> = ({
@@ -23,6 +26,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
   isSpeaking = false,
   isBlinking = true,
   emotionState = 'normal',
+  emotionIntensity = 50,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -33,18 +37,20 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { background } = useBackgroundStore();
 
   // サイズ設定
   const dimensions = {
-    small: { width: 150, height: 150 },
-    medium: { width: 300, height: 300 },
-    large: { width: 500, height: 500 },
+    small: { width: 150, height: 200 },
+    medium: { width: 300, height: 400 },
+    large: { width: 500, height: 650 },
+    xlarge: { width: 700, height: 900 },
   };
 
   const { width, height } = dimensions[size];
 
-  // 表情設定
-  const applyExpression = useCallback((vrm: VRM, emotion: string) => {
+  // 強化された表情設定（感情の強度に対応）
+  const applyExpression = useCallback((vrm: VRM, emotion: EmotionType, intensity: number = 50) => {
     if (!vrm || !vrm.expressionManager) return;
 
     // 全ての表情をリセット
@@ -54,24 +60,62 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
     vrm.expressionManager.setValue('angry', 0);
     vrm.expressionManager.setValue('surprised', 0);
     vrm.expressionManager.setValue('relaxed', 0);
+    vrm.expressionManager.setValue('blink', 0);
+    vrm.expressionManager.setValue('blinkLeft', 0);
+    vrm.expressionManager.setValue('blinkRight', 0);
+
+    // 感情の強度を0-1に正規化
+    const normalizedIntensity = Math.min(1, intensity / 100);
 
     // 感情に応じた表情を設定
     switch (emotion) {
       case 'happy':
-        vrm.expressionManager.setValue('happy', 1.0);
+        vrm.expressionManager.setValue('happy', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'sad':
-        vrm.expressionManager.setValue('sad', 1.0);
+        vrm.expressionManager.setValue('sad', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'angry':
-        vrm.expressionManager.setValue('angry', 1.0);
+        vrm.expressionManager.setValue('angry', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'surprised':
-        vrm.expressionManager.setValue('surprised', 1.0);
+        vrm.expressionManager.setValue('surprised', normalizedIntensity);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
         break;
       case 'love':
-        vrm.expressionManager.setValue('happy', 0.7);
-        vrm.expressionManager.setValue('relaxed', 0.3);
+        vrm.expressionManager.setValue('happy', normalizedIntensity * 0.7);
+        vrm.expressionManager.setValue('relaxed', normalizedIntensity * 0.3);
+        if (normalizedIntensity < 1) {
+          vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+        }
+        break;
+      case 'shy':
+        // 恥ずかしい表情（目を少し閉じて、微笑む）
+        vrm.expressionManager.setValue('happy', normalizedIntensity * 0.4);
+        vrm.expressionManager.setValue('blink', normalizedIntensity * 0.2);
+        vrm.expressionManager.setValue('relaxed', normalizedIntensity * 0.4);
+        break;
+      case 'excited':
+        // 興奮した表情（目を大きく開いて、笑顔）
+        vrm.expressionManager.setValue('happy', normalizedIntensity * 0.8);
+        vrm.expressionManager.setValue('surprised', normalizedIntensity * 0.2);
+        break;
+      case 'worried':
+        // 心配そうな表情（悲しみと驚きの混合）
+        vrm.expressionManager.setValue('sad', normalizedIntensity * 0.6);
+        vrm.expressionManager.setValue('surprised', normalizedIntensity * 0.2);
+        vrm.expressionManager.setValue('neutral', normalizedIntensity * 0.2);
         break;
       default:
         vrm.expressionManager.setValue('neutral', 1.0);
@@ -130,7 +174,7 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
     }
   }, []);
 
-  // アイドルモーション（呼吸・揺れ）
+  // アイドルモーション（自然な待機動作）
   const setupIdleMotion = useCallback((vrm: VRM) => {
     if (!vrm || !vrm.humanoid) return;
 
@@ -140,18 +184,74 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       const deltaTime = clockRef.current.getDelta();
       const time = clockRef.current.getElapsedTime();
 
-      // 呼吸アニメーション
-      const breathAmount = Math.sin(time * 2) * 0.003;
+      // 呼吸アニメーション（控えめ）
       const spine = vrmRef.current.humanoid.getNormalizedBoneNode('spine');
+      const upperChest = vrmRef.current.humanoid.getNormalizedBoneNode('upperChest');
       if (spine) {
-        spine.rotation.x = breathAmount;
+        spine.rotation.x = Math.sin(time * 1.0) * 0.003; // 呼吸
+      }
+      if (upperChest) {
+        upperChest.rotation.x = Math.sin(time * 1.0 + Math.PI * 0.5) * 0.002;
       }
 
-      // 頭の微妙な動き
+      // 頭の自然な動き（たまに見回す）
+      const neck = vrmRef.current.humanoid.getNormalizedBoneNode('neck');
       const head = vrmRef.current.humanoid.getNormalizedBoneNode('head');
+      if (neck) {
+        neck.rotation.y = Math.sin(time * 0.3) * 0.05; // ゆっくり左右を見る
+        neck.rotation.x = Math.sin(time * 0.4) * 0.02; // わずかな上下
+      }
       if (head) {
-        head.rotation.x = Math.sin(time * 1.5) * 0.02;
-        head.rotation.y = Math.sin(time * 1.2) * 0.02;
+        head.rotation.y = Math.sin(time * 0.3 + Math.PI * 0.3) * 0.03;
+      }
+
+      // 腕を自然に体の横に下ろす
+      const leftUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
+      const rightUpperArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
+      const leftLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftLowerArm');
+      const rightLowerArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightLowerArm');
+      
+      // 腕を体の横に自然に下ろす（足の横に手が来るように）
+      if (leftUpperArm) {
+        leftUpperArm.rotation.x = 0;      // まっすぐ
+        leftUpperArm.rotation.y = 0;      // まっすぐ
+        leftUpperArm.rotation.z = -1.57;  // 90度下に（-π/2）
+      }
+      if (rightUpperArm) {
+        rightUpperArm.rotation.x = 0;      // まっすぐ
+        rightUpperArm.rotation.y = 0;      // まっすぐ
+        rightUpperArm.rotation.z = 1.57;   // 90度下に（π/2）
+      }
+      if (leftLowerArm) {
+        leftLowerArm.rotation.x = 0;      // まっすぐ
+        leftLowerArm.rotation.y = 0;      // まっすぐ
+        leftLowerArm.rotation.z = 0;      // まっすぐ
+      }
+      if (rightLowerArm) {
+        rightLowerArm.rotation.x = 0;      // まっすぐ
+        rightLowerArm.rotation.y = 0;      // まっすぐ
+        rightLowerArm.rotation.z = 0;      // まっすぐ
+      }
+
+      // 重心移動（立ち姿勢を変える）
+      const hips = vrmRef.current.humanoid.getNormalizedBoneNode('hips');
+      if (hips) {
+        // 体重移動のシミュレーション
+        hips.position.x = Math.sin(time * 0.2) * 0.02; // 左右に体重移動
+        hips.position.y = Math.sin(time * 0.4) * 0.01; // わずかな上下動
+        hips.rotation.y = Math.sin(time * 0.15) * 0.02; // わずかに体を向ける
+      }
+
+      // 足の動き（軽く足踏み）
+      const leftUpperLeg = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperLeg');
+      const rightUpperLeg = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperLeg');
+      if (leftUpperLeg && rightUpperLeg) {
+        // たまに足を動かす（体重移動に合わせて）
+        const walkCycle = Math.sin(time * 0.2);
+        if (Math.abs(walkCycle) > 0.8) {
+          leftUpperLeg.rotation.x = Math.sin(time * 2) * 0.02;
+          rightUpperLeg.rotation.x = Math.sin(time * 2 + Math.PI) * 0.02;
+        }
       }
 
       // VRMの更新
@@ -170,31 +270,183 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // シーン作成
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf0f0f0);
+        
+        // 背景設定の適用
+        console.log('Background settings:', background); // デバッグ用
+        
+        // テクスチャローダー
+        const textureLoader = new THREE.TextureLoader();
+        
+        if (background && background.type === 'preset') {
+          // プリセット背景の作成（グラデーション背景）
+          const presetGradients: Record<string, { color1: string; color2: string; color3: string }> = {
+            bedroom: { color1: '#FFE4E1', color2: '#FFF0F5', color3: '#FFF5EE' },
+            living: { color1: '#E6E6FA', color2: '#F0F8FF', color3: '#F5F5F5' },
+            cafe: { color1: '#F5DEB3', color2: '#FFE4B5', color3: '#FAEBD7' },
+            park: { color1: '#90EE90', color2: '#98FB98', color3: '#87CEEB' },
+            beach: { color1: '#87CEEB', color2: '#ADD8E6', color3: '#F0E68C' },
+            city: { color1: '#DCDCDC', color2: '#C0C0C0', color3: '#A9A9A9' },
+            school: { color1: '#F0E68C', color2: '#FAFAD2', color3: '#FFF8DC' },
+            library: { color1: '#D2B48C', color2: '#DEB887', color3: '#F5DEB3' },
+          };
+          
+          const gradient = presetGradients[background.presetId || 'bedroom'];
+          
+          // グラデーション背景を作成
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            const grd = ctx.createLinearGradient(0, 0, 0, 512);
+            grd.addColorStop(0, gradient.color1);
+            grd.addColorStop(0.5, gradient.color2);
+            grd.addColorStop(1, gradient.color3);
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // グラデーションの上に簡単な模様を追加
+            if (background.presetId === 'bedroom' || background.presetId === 'living') {
+              // 窓のような矩形を追加
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+              ctx.fillRect(100, 50, 150, 200);
+              ctx.fillRect(260, 50, 150, 200);
+            } else if (background.presetId === 'park' || background.presetId === 'beach') {
+              // 雲のような円を追加
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+              ctx.beginPath();
+              ctx.arc(100, 100, 40, 0, Math.PI * 2);
+              ctx.arc(150, 100, 50, 0, Math.PI * 2);
+              ctx.arc(200, 100, 40, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            
+            // 背景を平面として追加
+            const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
+            const backgroundMaterial = new THREE.MeshBasicMaterial({ 
+              map: texture,
+              side: THREE.DoubleSide
+            });
+            const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+            backgroundMesh.position.z = -3;
+            backgroundMesh.position.y = 1.5;
+            scene.add(backgroundMesh);
+            
+            // シーンの背景色も設定
+            scene.background = new THREE.Color(gradient.color2);
+            console.log('Applied preset background gradient');
+          }
+        } else if (background && background.type === 'room' && background.roomConfig) {
+          // ルームカスタマイズの場合
+          scene.background = new THREE.Color(background.roomConfig.wallColor);
+          
+          // 床の追加
+          const floorGeometry = new THREE.PlaneGeometry(10, 10);
+          const floorColors: Record<string, string> = {
+            wood: '#8B4513',
+            carpet: '#696969',
+            tile: '#E0E0E0',
+          };
+          const floorMaterial = new THREE.MeshPhongMaterial({ 
+            color: floorColors[background.roomConfig.floorType] || '#8B4513',
+            side: THREE.DoubleSide
+          });
+          const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+          floor.rotation.x = -Math.PI / 2;
+          floor.position.y = -1.5;
+          scene.add(floor);
+        } else {
+          // デフォルト背景（寝室のグラデーション）
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            // ピンク系のグラデーション（寝室）
+            const grd = ctx.createLinearGradient(0, 0, 0, 512);
+            grd.addColorStop(0, '#FFE4E1');
+            grd.addColorStop(0.5, '#FFF0F5');
+            grd.addColorStop(1, '#FFF5EE');
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // 窓のような矩形を追加
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(100, 50, 150, 200);
+            ctx.fillRect(260, 50, 150, 200);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            
+            // 背景を平面として追加
+            const backgroundGeometry = new THREE.PlaneGeometry(8, 6);
+            const backgroundMaterial = new THREE.MeshBasicMaterial({ 
+              map: texture,
+              side: THREE.DoubleSide
+            });
+            const backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+            backgroundMesh.position.z = -3;
+            backgroundMesh.position.y = 1.5;
+            scene.add(backgroundMesh);
+            
+            // シーンの背景色も設定
+            scene.background = new THREE.Color('#FFF0F5');
+            console.log('Applied default background gradient');
+          }
+        }
+        
         sceneRef.current = scene;
 
-        // ライティング
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // ライティング設定
+        let ambientColor = 0xffffff;
+        let directionalColor = 0xffffff;
+        const ambientIntensity = 0.6;
+        const directionalIntensity = 0.4;
+        
+        if (background.type === 'room' && background.roomConfig) {
+          // 照明タイプに応じた色温度の設定
+          switch (background.roomConfig.lighting) {
+            case 'warm':
+              ambientColor = 0xFFE4B5;
+              directionalColor = 0xFFD700;
+              break;
+            case 'cool':
+              ambientColor = 0xE0F2FF;
+              directionalColor = 0xADD8E6;
+              break;
+            case 'natural':
+            default:
+              ambientColor = 0xffffff;
+              directionalColor = 0xffffff;
+              break;
+          }
+        }
+        
+        const ambientLight = new THREE.AmbientLight(ambientColor, ambientIntensity);
         scene.add(ambientLight);
         
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        const directionalLight = new THREE.DirectionalLight(directionalColor, directionalIntensity);
         directionalLight.position.set(1, 1, 1);
+        directionalLight.castShadow = true;
         scene.add(directionalLight);
 
         // カメラ
         const camera = new THREE.PerspectiveCamera(
-          35,
+          45,  // 視野角を広げて全身を表示
           width / height,
           0.1,
           1000
         );
-        camera.position.set(0, 0.6, 2.5);
+        camera.position.set(0, 1.0, 2.5);  // カメラを正面に配置
         cameraRef.current = camera;
 
         // レンダラー
         const renderer = new THREE.WebGLRenderer({ 
           antialias: true,
-          alpha: true 
+          alpha: false // 背景を表示するためalphaを無効に
         });
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -207,13 +459,13 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
 
         // コントロール（デバッグ用、本番では無効化可能）
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.6, 0);
+        controls.target.set(0, 1.0, 0);  // カメラターゲットを体の中心に設定
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
-        controls.enableZoom = false;
+        controls.enableZoom = true;
         controls.minDistance = 1.5;
-        controls.maxDistance = 3.5;
+        controls.maxDistance = 4.0;
 
         // VRMローダー
         const loader = new GLTFLoader();
@@ -229,18 +481,95 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
           // VRMの回転を修正
           VRMUtils.rotateVRM0(vrm);
           
+          // モデルのスケール調整（全身がしっかり見えるサイズ）
+          vrm.scene.scale.set(0.9, 0.9, 0.9);  // 少し縮小して全体を表示
+          
           // シーンに追加
           scene.add(vrm.scene);
           vrmRef.current = vrm;
 
-          // カメラを顔に向ける
+          // モデルの位置を調整（頭がコンテナ上端、全身が見えるように）
+          vrm.scene.position.set(0, -0.5, 0);  // モデルを下げて全身を表示
+
+          // 初期ポーズ設定（T-ポーズから自然な立ちポーズへ）
+          if (vrm.humanoid) {
+            // シンプルで自然な腕のポジション
+            const leftUpperArm = vrm.humanoid.getNormalizedBoneNode('leftUpperArm');
+            const rightUpperArm = vrm.humanoid.getNormalizedBoneNode('rightUpperArm');
+            const leftLowerArm = vrm.humanoid.getNormalizedBoneNode('leftLowerArm');
+            const rightLowerArm = vrm.humanoid.getNormalizedBoneNode('rightLowerArm');
+            
+            // 腕を体に沿って真下に下ろす（初期ポーズ）
+            if (leftUpperArm) {
+              leftUpperArm.rotation.x = 0;  // まっすぐ
+              leftUpperArm.rotation.y = 0;  // まっすぐ
+              leftUpperArm.rotation.z = 0; // まっすぐ下に下ろす
+            }
+            if (rightUpperArm) {
+              rightUpperArm.rotation.x = 0;  // まっすぐ
+              rightUpperArm.rotation.y = 0;  // まっすぐ
+              rightUpperArm.rotation.z = 0; // まっすぐ下に下ろす
+            }
+            
+            // 肘はまっすぐ
+            if (leftLowerArm) {
+              leftLowerArm.rotation.x = 0;
+              leftLowerArm.rotation.y = 0;
+              leftLowerArm.rotation.z = 0;
+            }
+            if (rightLowerArm) {
+              rightLowerArm.rotation.x = 0;
+              rightLowerArm.rotation.y = 0;
+              rightLowerArm.rotation.z = 0;
+            }
+            
+            // 手首は自然な状態に
+            const leftHand = vrm.humanoid.getNormalizedBoneNode('leftHand');
+            const rightHand = vrm.humanoid.getNormalizedBoneNode('rightHand');
+            if (leftHand) {
+              // 手首はデフォルトのまま
+            }
+            if (rightHand) {
+              // 手首はデフォルトのまま
+            }
+            
+            // 体は自然な状態に
+            const spine = vrm.humanoid.getNormalizedBoneNode('spine');
+            const neck = vrm.humanoid.getNormalizedBoneNode('neck');
+            
+            if (spine) {
+              // 背骨はデフォルトのまま
+            }
+            if (neck) {
+              // 首もデフォルトのまま
+            }
+          }
+
+          // カメラのターゲットを全身が見えるように設定（頭がコンテナ上端に）
           const head = vrm.humanoid?.getNormalizedBoneNode('head');
           if (head) {
-            camera.lookAt(head.position);
+            // 頭の位置を取得
+            const headWorldPosition = new THREE.Vector3();
+            head.getWorldPosition(headWorldPosition);
+            
+            // 頭がコンテナの上端に来るようにカメラを調整
+            // コンテナの高さに基づいて計算
+            const containerAspect = width / height;
+            const fov = 45 * (Math.PI / 180); // ラジアンに変換
+            const distance = 2.5;
+            const visibleHeight = 2 * Math.tan(fov / 2) * distance;
+            
+            // 頭をコンテナ上端に配置するための調整
+            const targetY = headWorldPosition.y - visibleHeight * 0.45; // 頭を上端近くに
+            
+            // カメラのターゲットとポジションを設定
+            controls.target.set(0, targetY, 0);
+            camera.position.set(0, targetY, distance);
+            controls.update();
           }
 
           // 初期表情設定
-          applyExpression(vrm, emotionState);
+          applyExpression(vrm, emotionState, emotionIntensity);
 
           // まばたき設定
           if (isBlinking) {
@@ -302,14 +631,14 @@ export const VRMAvatar: React.FC<VRMAvatarProps> = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, height, avatar.vrmUrl]);
+  }, [width, height, avatar.vrmUrl, background]);
 
   // 感情状態の変更を監視
   useEffect(() => {
     if (vrmRef.current) {
-      applyExpression(vrmRef.current, emotionState);
+      applyExpression(vrmRef.current, emotionState, emotionIntensity);
     }
-  }, [emotionState, applyExpression]);
+  }, [emotionState, emotionIntensity, applyExpression]);
 
   // 話している状態の変更を監視
   useEffect(() => {

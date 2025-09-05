@@ -1,12 +1,26 @@
 /** @type {import('next').NextConfig} */
+
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 const nextConfig = {
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': ['@svgr/webpack'],
-      },
+  reactStrictMode: true,
+  turbopack: {
+    rules: {
+      '*.svg': ['@svgr/webpack'],
     },
   },
+  experimental: {
+    optimizeCss: true,
+  },
+  optimizePackageImports: [
+    'lucide-react',
+    '@pixiv/three-vrm',
+    'three',
+    'openai',
+    'zod',
+  ],
   async headers() {
     return [
       {
@@ -45,22 +59,49 @@ const nextConfig = {
   httpAgentOptions: {
     keepAlive: true,
   },
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: 10,
-            enforce: true,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            priority: 5,
-            reuseExistingChunk: true,
+  webpack: (config, { dev, isServer }) => {
+    // プロダクションビルド時の最適化
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+        moduleIds: 'deterministic',
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            framework: {
+              name: 'framework',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+              priority: 40,
+              enforce: true,
+            },
+            lib: {
+              test: /[\\/]node_modules[\\/]/,
+              name(module) {
+                const packageName = module.context.match(
+                  /[\\/]node_modules[\\/](.*?)([[\\/]|$])/
+                )?.[1];
+                return `lib-${packageName?.replace('@', '')}`;
+              },
+              priority: 30,
+              minChunks: 1,
+              reuseExistingChunk: true,
+            },
+            commons: {
+              name: 'commons',
+              minChunks: 2,
+              priority: 20,
+            },
+            threejs: {
+              test: /[\\/]node_modules[\\/](three|@pixiv[\\/]three-vrm)[\\/]/,
+              name: 'threejs',
+              priority: 35,
+              enforce: true,
+            },
           },
         },
       };
@@ -69,4 +110,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

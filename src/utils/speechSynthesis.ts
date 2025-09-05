@@ -1,3 +1,5 @@
+import { CharacterPersonality } from '@/types';
+
 export class SpeechSynthesisManager {
   private static instance: SpeechSynthesisManager;
   private synth: SpeechSynthesis | null = null;
@@ -112,7 +114,7 @@ export class SpeechSynthesisManager {
     return this.synth.getVoices();
   }
 
-  getCharacterVoice(gender: 'boyfriend' | 'girlfriend', personality?: Record<string, number>): SpeechSynthesisVoice | null {
+  getCharacterVoice(gender: 'boyfriend' | 'girlfriend', personality?: CharacterPersonality): SpeechSynthesisVoice | null {
     const voices = this.getJapaneseVoices();
     
     if (gender === 'girlfriend') {
@@ -132,7 +134,7 @@ export class SpeechSynthesisManager {
     }
   }
 
-  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: Record<string, number> }, options: {
+  speakWithPersonality(text: string, character: { gender: 'boyfriend' | 'girlfriend'; personality: CharacterPersonality }, options: {
     onStart?: () => void;
     onEnd?: () => void;
     onError?: (error: SpeechSynthesisErrorEvent) => void;
