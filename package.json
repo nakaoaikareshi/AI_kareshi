@@ -13,7 +13,11 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^15.5.2",
@@ -27,6 +31,7 @@
     "next": "15.5.2",
     "next-auth": "^4.24.11",
     "openai": "^5.16.0",
+    "pg": "^8.16.3",
     "prisma": "^6.15.0",
     "react": "19.1.0",
     "react-colorful": "^5.6.1",
