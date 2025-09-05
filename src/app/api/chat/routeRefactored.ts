@@ -122,8 +122,9 @@ function formatConversationHistory(
 
 // メインハンドラー
 export const POST = apiWrapper(
-  async (request: NextRequest & { body: any }) => {
-    const { message, character, conversationHistory, user } = request.body;
+  async (request: NextRequest) => {
+    const body = await request.json();
+    const { message, character, conversationHistory, user } = body;
 
     // 気分の取得
     const moodState = await MoodSystem.getMoodState(character.gender);
