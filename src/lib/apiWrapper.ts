@@ -69,7 +69,7 @@ export const apiWrapper = <T = any>(
       if (options?.requireAuth) {
         const authHeader = request.headers.get('authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          throw new AuthenticationError('認証トークンが必要です');
+          throw AuthenticationError('認証トークンが必要です');
         }
         // TODO: トークン検証ロジック
       }
@@ -83,7 +83,7 @@ export const apiWrapper = <T = any>(
         // 簡易的なメモリベースのレート制限
         const rateLimitKey = `${request.url}-${ip}`;
         if (!checkRateLimit(rateLimitKey, options.rateLimit)) {
-          throw new RateLimitError();
+          throw RateLimitError();
         }
       }
 
@@ -99,7 +99,7 @@ export const apiWrapper = <T = any>(
           body = options.validation.body.parse(rawBody);
         } catch (error) {
           if (error instanceof z.ZodError) {
-            throw new ValidationError('リクエストボディが不正です', error.errors);
+            throw ValidationError('リクエストボディが不正です', error.errors);
           }
           throw error;
         }
@@ -113,7 +113,7 @@ export const apiWrapper = <T = any>(
           query = options.validation.query.parse(queryObject);
         } catch (error) {
           if (error instanceof z.ZodError) {
-            throw new ValidationError('クエリパラメータが不正です', error.errors);
+            throw ValidationError('クエリパラメータが不正です', error.errors);
           }
           throw error;
         }
@@ -125,7 +125,7 @@ export const apiWrapper = <T = any>(
           params = options.validation.params.parse(context.params);
         } catch (error) {
           if (error instanceof z.ZodError) {
-            throw new ValidationError('パスパラメータが不正です', error.errors);
+            throw ValidationError('パスパラメータが不正です', error.errors);
           }
           throw error;
         }

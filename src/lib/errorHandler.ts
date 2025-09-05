@@ -114,13 +114,13 @@ export const handleError = (error: Error | AppError): {
   if (error instanceof AppError) {
     // ログ出力
     if (error.severity === ErrorSeverity.CRITICAL) {
-      logger.error('Critical error occurred', error);
+      logger.error('Critical error occurred', { error });
     } else if (error.severity === ErrorSeverity.HIGH) {
-      logger.error('High severity error', error);
+      logger.error('High severity error', { error });
     } else if (error.severity === ErrorSeverity.MEDIUM) {
-      logger.warn('Medium severity error', error);
+      logger.warn('Medium severity error', { error });
     } else {
-      logger.info('Low severity error', error.message);
+      logger.info('Low severity error', { message: error.message });
     }
 
     // プロダクション環境では詳細を隠す
@@ -138,7 +138,7 @@ export const handleError = (error: Error | AppError): {
   }
 
   // 通常のエラーの場合
-  logger.error('Unexpected error occurred', error);
+  logger.error('Unexpected error occurred', { error });
 
   // 既知のエラータイプを判定
   let statusCode = 500;

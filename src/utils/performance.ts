@@ -76,7 +76,9 @@ export const memoize = <T extends (...args: any[]) => any>(
     // キャッシュサイズ制限
     if (cache.size >= maxSize) {
       const firstKey = cache.keys().next().value;
-      cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        cache.delete(firstKey);
+      }
     }
 
     cache.set(key, { value: result, timestamp: Date.now() });

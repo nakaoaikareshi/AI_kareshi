@@ -12,7 +12,7 @@ export const ariaProps = (
   
   Object.entries(conditions).forEach(([key, value]) => {
     if (value !== undefined && value !== false) {
-      result[`aria-${key}`] = value;
+      result[`aria-${key}`] = value === true ? 'true' : value as string;
     }
   });
   

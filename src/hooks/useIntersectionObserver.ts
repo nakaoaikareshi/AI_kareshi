@@ -20,7 +20,7 @@ export const useIntersectionObserver = ({
 }: UseIntersectionObserverProps = {}) => {
   const [entry, setEntry] = useState<IntersectionObserverEntry | undefined>();
   const [isVisible, setIsVisible] = useState(false);
-  const elementRef = useRef<Element>();
+  const elementRef = useRef<Element | null>(null);
   const frozen = useRef(false);
 
   const updateEntry = ([entry]: IntersectionObserverEntry[]): void => {
