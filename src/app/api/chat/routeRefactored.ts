@@ -127,15 +127,12 @@ export const POST = apiWrapper(
     const { message, character, conversationHistory, user } = body;
 
     // 気分の取得
-    const moodState = await MoodSystem.getMoodState(character.gender);
+    const moodState = MoodSystem.calculateCurrentMood(character);
     
     // 拒否システムのチェック
-    const refusal = RefusalSystem.shouldRefuse(
-      message,
-      character.gender,
-      character.personality,
-      moodState?.currentMood || 50
-    );
+    const refusalCondition = RefusalSystem.getCurrentRefusalCondition();
+    const refusal = refusalCondition ? 
+      RefusalSystem.getRefusalResponse(message, character, refusalCondition) : null;
 
     if (refusal) {
       return successResponse({
