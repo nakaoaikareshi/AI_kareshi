@@ -32,7 +32,7 @@ export class VRMExpressionManager {
     ];
     
     expressions.forEach(exp => {
-      this.vrm.expressionManager?.setValue(exp, 0);
+      this.vrm!.expressionManager?.setValue(exp, 0);
     });
   }
   
@@ -54,69 +54,69 @@ export class VRMExpressionManager {
     // 感情に応じた表情を設定
     switch (emotion) {
       case 'happy':
-        this.vrm.expressionManager.setValue('happy', normalizedIntensity);
+        this.vrm!.expressionManager!.setValue('happy', normalizedIntensity);
         if (normalizedIntensity < 1) {
-          this.vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+          this.vrm!.expressionManager!.setValue('neutral', 1 - normalizedIntensity);
         }
         break;
         
       case 'sad':
-        this.vrm.expressionManager.setValue('sad', normalizedIntensity);
+        this.vrm!.expressionManager!.setValue('sad', normalizedIntensity);
         if (normalizedIntensity < 1) {
-          this.vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+          this.vrm!.expressionManager!.setValue('neutral', 1 - normalizedIntensity);
         }
         break;
         
       case 'angry':
-        this.vrm.expressionManager.setValue('angry', normalizedIntensity);
+        this.vrm!.expressionManager!.setValue('angry', normalizedIntensity);
         if (normalizedIntensity < 1) {
-          this.vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+          this.vrm!.expressionManager!.setValue('neutral', 1 - normalizedIntensity);
         }
         break;
         
       case 'surprised':
-        this.vrm.expressionManager.setValue('surprised', normalizedIntensity);
+        this.vrm!.expressionManager!.setValue('surprised', normalizedIntensity);
         if (normalizedIntensity < 1) {
-          this.vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+          this.vrm!.expressionManager!.setValue('neutral', 1 - normalizedIntensity);
         }
         break;
         
       case 'love':
-        this.vrm.expressionManager.setValue('happy', normalizedIntensity * 0.7);
-        this.vrm.expressionManager.setValue('relaxed', normalizedIntensity * 0.3);
+        this.vrm!.expressionManager!.setValue('happy', normalizedIntensity * 0.7);
+        this.vrm!.expressionManager!.setValue('relaxed', normalizedIntensity * 0.3);
         if (normalizedIntensity < 1) {
-          this.vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+          this.vrm!.expressionManager!.setValue('neutral', 1 - normalizedIntensity);
         }
         break;
         
       case 'shy':
-        this.vrm.expressionManager.setValue('happy', normalizedIntensity * 0.3);
-        this.vrm.expressionManager.setValue('relaxed', normalizedIntensity * 0.2);
+        this.vrm!.expressionManager!.setValue('happy', normalizedIntensity * 0.3);
+        this.vrm!.expressionManager!.setValue('relaxed', normalizedIntensity * 0.2);
         if (normalizedIntensity < 1) {
-          this.vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+          this.vrm!.expressionManager!.setValue('neutral', 1 - normalizedIntensity);
         }
         break;
         
       case 'excited':
-        this.vrm.expressionManager.setValue('happy', normalizedIntensity * 0.8);
-        this.vrm.expressionManager.setValue('surprised', normalizedIntensity * 0.2);
+        this.vrm!.expressionManager!.setValue('happy', normalizedIntensity * 0.8);
+        this.vrm!.expressionManager!.setValue('surprised', normalizedIntensity * 0.2);
         break;
         
       case 'worried':
-        this.vrm.expressionManager.setValue('sad', normalizedIntensity * 0.4);
-        this.vrm.expressionManager.setValue('surprised', normalizedIntensity * 0.2);
+        this.vrm!.expressionManager!.setValue('sad', normalizedIntensity * 0.4);
+        this.vrm!.expressionManager!.setValue('surprised', normalizedIntensity * 0.2);
         if (normalizedIntensity < 1) {
-          this.vrm.expressionManager.setValue('neutral', 1 - normalizedIntensity);
+          this.vrm!.expressionManager!.setValue('neutral', 1 - normalizedIntensity);
         }
         break;
         
       case 'normal':
       default:
-        this.vrm.expressionManager.setValue('neutral', 1);
+        this.vrm!.expressionManager!.setValue('neutral', 1);
         break;
     }
     
-    this.vrm.expressionManager.update();
+    this.vrm!.expressionManager!.update();
   }
   
   /**
@@ -135,11 +135,11 @@ export class VRMExpressionManager {
       
       // 瞬きアニメーション
       const blinkDuration = 0.15;
-      this.vrm.expressionManager.setValue('blink', 1);
+      this.vrm!.expressionManager!.setValue('blink', 1);
       
       setTimeout(() => {
         if (this.vrm?.expressionManager) {
-          this.vrm.expressionManager.setValue('blink', 0);
+          this.vrm!.expressionManager!.setValue('blink', 0);
           // 感情表情を復元
           this.applyEmotion(this.currentEmotion, this.currentIntensity);
         }
@@ -156,10 +156,10 @@ export class VRMExpressionManager {
     if (isSpeaking) {
       this.speakTimer += deltaTime * 10;
       const mouthOpen = Math.abs(Math.sin(this.speakTimer)) * 0.5;
-      this.vrm.expressionManager.setValue('aa', mouthOpen);
+      this.vrm!.expressionManager!.setValue('aa', mouthOpen);
     } else {
       this.speakTimer = 0;
-      this.vrm.expressionManager.setValue('aa', 0);
+      this.vrm!.expressionManager!.setValue('aa', 0);
     }
   }
   

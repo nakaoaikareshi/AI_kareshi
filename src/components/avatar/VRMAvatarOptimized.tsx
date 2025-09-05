@@ -153,8 +153,8 @@ const VRMAvatarOptimizedComponent: React.FC<VRMAvatarOptimizedProps> = ({
       width,
       height,
       background: {
-        type: background.type as 'color' | 'image' | 'gradient',
-        value: background.value,
+        type: background.type === 'custom' ? 'image' : 'color',
+        value: background.customUrl || undefined,
       },
     });
     
@@ -235,8 +235,8 @@ const VRMAvatarOptimizedComponent: React.FC<VRMAvatarOptimizedProps> = ({
   useEffect(() => {
     if (sceneManagerRef.current) {
       sceneManagerRef.current.updateBackground({
-        type: background.type as 'color' | 'image' | 'gradient',
-        value: background.value,
+        type: background.type === 'custom' ? 'image' : 'color',
+        value: background.customUrl || undefined,
       });
     }
   }, [background]);

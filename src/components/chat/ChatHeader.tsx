@@ -31,7 +31,7 @@ interface ChatHeaderProps {
   isSpeaking: boolean;
   currentEmotion: string;
   emotionIntensity?: number;
-  onOpenModal: (modalType: string) => void;
+  onOpenModal: (modalType: any) => void;
 }
 
 const ChatHeaderComponent: React.FC<ChatHeaderProps> = ({
@@ -75,7 +75,7 @@ const ChatHeaderComponent: React.FC<ChatHeaderProps> = ({
             mood={moodState?.currentMood || 50}
             isSpeaking={isSpeaking}
             isBlinking={true}
-            emotionState={currentEmotion}
+            emotionState={currentEmotion as any}
             emotionIntensity={emotionIntensity}
           />
         </div>

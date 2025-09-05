@@ -40,7 +40,7 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({ text }) => {
             seriousness: character.personality.seriousness,
             activeness: character.personality.activeness,
             empathy: character.personality.empathy
-          } as Record<string, number>
+          } as any
         }, {
           onStart: () => {
             setIsPlaying(true);

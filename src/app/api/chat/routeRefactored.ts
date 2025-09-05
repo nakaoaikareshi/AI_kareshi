@@ -156,9 +156,9 @@ export const POST = apiWrapper(
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: systemPrompt },
-          ...(historyContext ? [{ role: 'assistant', content: historyContext }] : []),
-          { role: 'user', content: message },
+          { role: 'system' as const, content: systemPrompt },
+          ...(historyContext ? [{ role: 'assistant' as const, content: historyContext }] : []),
+          { role: 'user' as const, content: message },
         ],
         max_tokens: 200,
         temperature: 0.8,
@@ -178,7 +178,7 @@ export const POST = apiWrapper(
     } catch (error) {
       // OpenAI APIエラーの場合
       if (error instanceof Error) {
-        throw new ExternalAPIError(
+        throw ExternalAPIError(
           'OpenAI',
           error.message,
           { originalError: error }

@@ -7,7 +7,7 @@ import React, { ReactNode } from 'react';
 
 interface ScreenReaderOnlyProps {
   children: ReactNode;
-  as?: keyof JSX.IntrinsicElements;
+  as?: keyof React.JSX.IntrinsicElements;
 }
 
 export const ScreenReaderOnly: React.FC<ScreenReaderOnlyProps> = ({ 

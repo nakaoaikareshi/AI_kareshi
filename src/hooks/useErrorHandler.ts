@@ -3,7 +3,7 @@
  * コンポーネント内でのエラー処理を簡潔に実装
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   AppError, 
   ErrorType, 
@@ -25,7 +25,7 @@ interface UseErrorHandlerReturn {
   setError: (error: Error | AppError | string | null) => void;
   clearError: () => void;
   handleAsyncError: <T>(promise: Promise<T>) => Promise<T | undefined>;
-  ErrorDisplay: () => JSX.Element | null;
+  ErrorDisplay: () => React.JSX.Element | null;
 }
 
 /**
