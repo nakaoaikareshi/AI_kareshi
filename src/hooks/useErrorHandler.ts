@@ -115,7 +115,7 @@ export const useErrorHandler = (
   }, [errorState.isError, autoHideDelay, clearError]);
 
   // エラー表示コンポーネント
-  const ErrorDisplay = useCallback(() => {
+  const ErrorDisplay = () => {
     if (!errorState.isError || !errorState.message) return null;
 
     const getErrorColor = () => {
@@ -161,7 +161,7 @@ export const useErrorHandler = (
         </div>
       </div>
     );
-  }, [errorState, clearError]);
+  };
 
   return {
     error: errorState,
